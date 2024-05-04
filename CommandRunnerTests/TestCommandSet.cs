@@ -10,7 +10,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestList() 
         {
-            ICommandSet cs = new CommandSet(new List<Type> { typeof(Commands) });
+            ICommandSet cs = new CommandSet(typeof(Commands));
             Assert.AreEqual(cs.Commands.Count, 4);
         } // end TestList()
 

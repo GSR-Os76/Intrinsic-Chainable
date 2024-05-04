@@ -19,14 +19,14 @@ namespace GSR.Tests.CommandRunner
         public void TestCodeMultipleParameters()
         {
             ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
-            Assert.AreEqual(c.Code, $"{nameof(Commands.CommadTets)}(_, _)");
+            Assert.AreEqual(c.Code, $"{nameof(Commands.CommadTets)}(?, ?)");
         } // end TestCodeMultipleParameters()
 
         [TestMethod]
         public void TestCodeSingleParameters()
         {
             ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
-            Assert.AreEqual(c.Code, $"{nameof(Commands.smkdlm)}(_)");
+            Assert.AreEqual(c.Code, $"{nameof(Commands.smkdlm)}(?)");
         } // end TestCodeSingleParameters()
 
 

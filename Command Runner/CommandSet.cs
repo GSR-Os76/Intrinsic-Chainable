@@ -9,6 +9,8 @@ namespace GSR.CommandRunner
 
 
 
+        public CommandSet(Type commandSource) : this(new List<Type>() { commandSource }) { } // end constructor
+
         public CommandSet(IEnumerable<Type> commandSources) : this(commandSources
             .SelectMany((x) => x.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             .Where((x) => x.GetCustomAttribute(typeof(CommandAttribute)) is not null)) { } // end constructor

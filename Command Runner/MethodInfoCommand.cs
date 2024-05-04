@@ -17,7 +17,7 @@ namespace GSR.CommandRunner
 
         public MethodInfoCommand(MethodInfo from) 
         {
-            Code = $"{from.Name}({Regex.Replace(new string('_', from.GetParameters().Length), @"(?<=.)(?!$)", ", ")})";
+            Code = $"{from.Name}({Regex.Replace(new string('?', from.GetParameters().Length), @"(?<=.)(?!$)", ", ")})";
             ReturnType = from.ReturnType;
             Parameters = from.GetParameters().Select((x) => x.ParameterType).ToArray();
 
