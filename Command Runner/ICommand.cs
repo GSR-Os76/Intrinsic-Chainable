@@ -10,7 +10,7 @@
 
 
 
-        public object Execute(object[] parameters);
+        public object? Execute(object[] parameters);
 
     } // end class
 } // end namespace

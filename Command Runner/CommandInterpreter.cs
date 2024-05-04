@@ -6,7 +6,7 @@
 
         // catch and log any exceptions
 
-
+        // meta commands started by '~' that give context info. See all commands, see various comand type information. See all variable. Etc
 
     } // end class
 } // end namespace
