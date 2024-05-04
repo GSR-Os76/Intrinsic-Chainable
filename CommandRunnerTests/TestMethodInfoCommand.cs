@@ -7,49 +7,26 @@ namespace GSR.Tests.CommandRunner
     [TestClass]
     public class TestMethodInfoCommand
     {
-        public static readonly MethodInfo ABMethod = typeof(TestMethodInfoCommand).GetMethod(nameof(AB)) ?? throw new NullReferenceException($"Failed to find: {nameof(AB)}");
-
-        public static readonly MethodInfo CommadTetsMethod = typeof(TestMethodInfoCommand).GetMethod(nameof(CommadTets)) ?? throw new NullReferenceException($"Failed to find: {nameof(CommadTets)}");
-
-        public static readonly MethodInfo smkdlmMethod = typeof(TestMethodInfoCommand).GetMethod(nameof(smkdlm)) ?? throw new NullReferenceException($"Failed to find: {nameof(smkdlm)}");
-
-        public static readonly MethodInfo SMethod = typeof(TestMethodInfoCommand).GetMethod(nameof(S)) ?? throw new NullReferenceException($"Failed to find: {nameof(S)}");
-
-
-
-        [Command]
-        public static void AB() { }
-
-        [Command]
-        public static StringBuilder CommadTets(int a, string b) => new StringBuilder(b).Append(" ").Append(a);
-
-        [Command]
-        public static int smkdlm(int a) => a;
-
-        [Command]
-        public static int S(Exception a) => 0;
-
-
-
+       
         [TestMethod]
         public void TestCodeNoParameters()
         {
-            ICommand c = new MethodInfoCommand(ABMethod);
-            Assert.AreEqual(c.Code, $"{nameof(AB)}()");
+            ICommand c = new MethodInfoCommand(Commands.ABMethod);
+            Assert.AreEqual(c.Code, $"{nameof(Commands.AB)}()");
         } // end TestCodeNoParameters()
 
         [TestMethod]
         public void TestCodeMultipleParameters()
         {
-            ICommand c = new MethodInfoCommand(CommadTetsMethod);
-            Assert.AreEqual(c.Code, $"{nameof(CommadTets)}(_, _)");
+            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            Assert.AreEqual(c.Code, $"{nameof(Commands.CommadTets)}(_, _)");
         } // end TestCodeMultipleParameters()
 
         [TestMethod]
         public void TestCodeSingleParameters()
         {
-            ICommand c = new MethodInfoCommand(smkdlmMethod);
-            Assert.AreEqual(c.Code, $"{nameof(smkdlm)}(_)");
+            ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
+            Assert.AreEqual(c.Code, $"{nameof(Commands.smkdlm)}(_)");
         } // end TestCodeSingleParameters()
 
 
@@ -57,21 +34,21 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestVoidReturnType()
         {
-            ICommand c = new MethodInfoCommand(ABMethod);
+            ICommand c = new MethodInfoCommand(Commands.ABMethod);
             Assert.AreEqual(c.ReturnType, typeof(void));
         } // end TestVoidReturnType()
 
         [TestMethod]
         public void TestPrimitiveReturnType()
         {
-            ICommand c = new MethodInfoCommand(smkdlmMethod);
+            ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
             Assert.AreEqual(c.ReturnType, typeof(int));
         } // end TestPrimitiveReturnType()
 
         [TestMethod]
         public void TestReturnType()
         {
-            ICommand c = new MethodInfoCommand(CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
             Assert.AreEqual(c.ReturnType, typeof(StringBuilder));
         } // end TestReturnType()
 
@@ -80,14 +57,14 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestNoParameterTypes() 
         {
-            ICommand c = new MethodInfoCommand(ABMethod);
+            ICommand c = new MethodInfoCommand(Commands.ABMethod);
             Assert.AreEqual(c.Parameters.Length, 0);
         } // end TestNoParameterTypes()
 
         [TestMethod]
         public void TestParameterTypes()
         {
-            ICommand c = new MethodInfoCommand(CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
             Type[] expectation = new Type[] {typeof(int), typeof(string)};
             Assert.AreEqual(c.Parameters.Length, expectation.Length);
             for (int i = 0; i < c.Parameters.Length; i++) 
@@ -99,7 +76,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestEmptyResultlessExecution() 
         {
-            ICommand c = new MethodInfoCommand(ABMethod);
+            ICommand c = new MethodInfoCommand(Commands.ABMethod);
             object? r = c.Execute(new object[] { });
             Assert.IsNull(r);
         } // end TestEmptyResultlessExecution()
@@ -108,7 +85,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow(12, "Some string something", "Some string something 12")]
         public void TestExecution(int a, string b, string result)
         {
-            ICommand c = new MethodInfoCommand(CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
             object? r = c.Execute(new object[] {a, b});
             Assert.AreEqual(r.GetType(), typeof(StringBuilder));
             Assert.AreEqual(r.ToString(), result);
@@ -117,7 +94,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestSubtypeArg()
         {
-            ICommand c = new MethodInfoCommand(SMethod);
+            ICommand c = new MethodInfoCommand(Commands.SMethod);
             object? r = c.Execute(new object[] { new InvalidOperationException() });
             Assert.AreEqual(r, 0);
         } // end TestSubtypeArg()

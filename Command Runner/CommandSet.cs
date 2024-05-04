@@ -16,7 +16,7 @@ namespace GSR.CommandRunner
 
         public CommandSet(IEnumerable<MethodInfo> commandSources) 
         {
-            // Commands = commandSources.Select((x) => new MethodInfoCommand(x)).ToImmutableList();
+            Commands = commandSources.Select((x) => (ICommand)new MethodInfoCommand(x)).ToImmutableList();
         } // end constructors
 
     } // end class

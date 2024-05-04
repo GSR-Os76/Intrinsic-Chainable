@@ -32,7 +32,7 @@ namespace GSR.CommandRunner
                 throw new InvalidOperationException($"Expected {Parameters.Length} arguements, was given {parameters.Length}");
 
             for(int i = 0; i < Parameters.Length; i++)
-                if (!(parameters[i].GetType().IsSubclassOf(Parameters[i]) || parameters[i].GetType() == Parameters[i])) 
+                if (!Parameters[i].IsAssignableFrom(parameters[i].GetType()))
                     throw new InvalidOperationException($"Type error at argument {i +1}:\n\r\t expected {Parameters[i]} or subtype, got {parameters[i].GetType()}");
 
             return m_function.Invoke(parameters);

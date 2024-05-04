@@ -8,15 +8,15 @@ namespace GSR.CommandRunner
 
 
 
-        public object GetValue(string name, Type type)
+        public object GetValue(string name, Type targetType)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (!q.Any())
                 throw new InvalidOperationException($"No varible found: {name}");
 
             Variable v = q.First();
-            if (!(v.Type.IsSubclassOf(type) || v.Type == type))
-                throw new InvalidOperationException($"Variable type mismatch, got: {v.Type}, expected: {type}");
+            if (!targetType.IsAssignableFrom(v.Type))
+                throw new InvalidOperationException($"Variable type mismatch, got: {v.Type}, expected: {targetType}");
 
             return v.Value;
         } // end GetValue()
