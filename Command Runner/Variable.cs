@@ -1,6 +1,6 @@
 ﻿namespace GSR.CommandRunner
 {
-    internal sealed class Variable
+    public class Variable
     {
         public string Name { get; }
 
