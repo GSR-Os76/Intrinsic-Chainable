@@ -4,9 +4,11 @@
     {
         public string Code { get; }
 
+        public string Name { get; }
+
         public Type ReturnType { get; }
 
-        public Type[] Parameters { get; }
+        public Type[] ParameterTypes { get; }
 
 
 
