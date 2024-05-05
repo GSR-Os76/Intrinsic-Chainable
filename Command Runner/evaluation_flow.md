@@ -1,4 +1,4 @@
-﻿# Command evaluat tree
+﻿# Command evaluation tree
 ```mermaid
 flowchart
 
@@ -6,17 +6,17 @@ flowchart
     0 --> s1
 
     s1{Space}
-    s1 -->|yes| metaCmdChar
-    s1 -->|no| metaCmdChar
+    s1 -->|yes| varC
+    s1 -->|no| varC
 
 
     metaCmdChar{~}
     metaCmdChar -->|yes|s4
-    metaCmdChar -->|no|varC
+    metaCmdChar -->|no|isCmd
 
     varC[$]
     varC -->|yes|mName1
-    varC -->|no|isCmd
+    varC -->|no|metaCmdChar
 
     s4{Space}
     s4 -->|yes| p1

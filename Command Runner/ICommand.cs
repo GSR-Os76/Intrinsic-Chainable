@@ -2,8 +2,6 @@
 {
     public interface ICommand
     {
-        public string Code { get; }
-
         public string Name { get; }
 
         public Type ReturnType { get; }
@@ -12,7 +10,7 @@
 
 
 
-        public object? Execute(object[] parameters);
+        public object? Execute(object?[] parameters);
 
     } // end class
 } // end namespace

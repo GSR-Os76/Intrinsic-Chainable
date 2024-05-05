@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace GSR.CommandRunner
+﻿namespace GSR.CommandRunner
 {
     public class SessionContext : ISessionContext
     {
@@ -8,7 +6,7 @@ namespace GSR.CommandRunner
 
 
 
-        public object GetValue(string name, Type targetType)
+        public object? GetValue(string name, Type targetType)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (!q.Any())
@@ -21,7 +19,7 @@ namespace GSR.CommandRunner
             return v.Value;
         } // end GetValue()
 
-        public void SetValue(string name, object value)
+        public void SetValue(string name, object? value)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (q.Any())

@@ -6,11 +6,11 @@
 
         public Type Type { get; private set; }
 
-        public object Value { get; private set; }
+        public object? Value { get; private set; }
 
 
 
-        public Variable(string name, Type type, object value)
+        public Variable(string name, Type type, object? value)
         {
             Name = name;
             Value = value;
@@ -19,7 +19,7 @@
 
 
 
-        public void Update(Type type, object value) 
+        public void Update(Type type, object? value) 
         {
             Type = type;
             Value = value;
