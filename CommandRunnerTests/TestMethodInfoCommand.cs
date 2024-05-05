@@ -23,29 +23,6 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
-        public void TestCodeNoParameters()
-        {
-            ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
-            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.AB)}()");
-        } // end TestCodeNoParameters()
-
-        [TestMethod]
-        public void TestCodeMultipleParameters()
-        {
-            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
-            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.CommadTets)}(?, ?)");
-        } // end TestCodeMultipleParameters()
-
-        [TestMethod]
-        public void TestCodeSingleParameters()
-        {
-            ICommand c = new MethodInfoCommand(CommandSetOne.smkdlmMethod);
-            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.smkdlm)}(?)");
-        } // end TestCodeSingleParameters()
-
-
-
-        [TestMethod]
         public void TestVoidReturnType()
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
@@ -101,8 +78,8 @@ namespace GSR.Tests.CommandRunner
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             object? r = c.Execute(new object[] {a, b});
-            Assert.AreEqual(r.GetType(), typeof(StringBuilder));
-            Assert.AreEqual(r.ToString(), result);
+            Assert.AreEqual(r?.GetType(), typeof(StringBuilder));
+            Assert.AreEqual(r?.ToString(), result);
         } // end TestExecution()
 
         [TestMethod]

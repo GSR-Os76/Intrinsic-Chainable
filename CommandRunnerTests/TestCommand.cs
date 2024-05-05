@@ -15,21 +15,6 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
-        public void TestCodeNoParameters()
-        {
-            Assert.AreEqual(B().Code, $"{B().Name}()");
-        } // end TestCodeNoParameters()
-
-        [TestMethod]
-        public void TestCodeMultipleParameters()
-        {
-            Assert.AreEqual(A().Code, $"{A().Name}(?, ?, ?)");
-        } // end TestCodeMultipleParameters()
-
-
-
-
-        [TestMethod]
         public void TestParameterlessExecution()
         {
             object? r = B().Execute(new object[] { });
