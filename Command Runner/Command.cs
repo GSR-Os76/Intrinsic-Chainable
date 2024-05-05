@@ -1,6 +1,4 @@
-﻿using System.Text.RegularExpressions;
-
-namespace GSR.CommandRunner
+﻿namespace GSR.CommandRunner
 {
     public class Command : ICommand
     {
@@ -33,10 +31,13 @@ namespace GSR.CommandRunner
 
             for (int i = 0; i < ParameterTypes.Length; i++)
                 if (!ParameterTypes[i].IsAssignableFrom(parameters[i]?.GetType()))
-                    throw new InvalidOperationException($"Type error at argument {i + 1}:\n\r\t expected {ParameterTypes[i]} or subtype, got {parameters[i]?.GetType()}");
+                    throw new InvalidOperationException($"Type error at argument {i + 1}:\n\r\t Expected {ParameterTypes[i]} or subtype, got {parameters[i]?.GetType()}");
 
-#warning verify type match
-            return m_function.Invoke(parameters);
+            object? result = m_function.Invoke(parameters);
+            if (!ReturnType.IsAssignableFrom(result?.GetType()) && !(ReturnType == typeof(void) && result == null))
+                throw new InvalidOperationException($"Invalid command function return type. Expected {ReturnType} or subtype,  got {result?.GetType()}");
+
+            return result;
         } // end Execute()
 
     } // end class

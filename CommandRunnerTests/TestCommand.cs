@@ -8,10 +8,11 @@ namespace GSR.Tests.CommandRunner
     {
         public ICommand A() => new Command("A", typeof(int), new Type[] { typeof(int), typeof(int), typeof(int) }, (x) => (int)x[0] + ((int)x[1] - (int)x[2]));
 
-        public ICommand B() => new Command("B", typeof(int), new Type[] { }, (x) => "" + 1+13);
+        public ICommand B() => new Command("B", typeof(string), new Type[] { }, (x) => "" + 1+13);
 
         public ICommand SubCable() => new Command("SubCable", typeof(void), new Type[] { typeof(Exception) }, (x) => null);
 
+        public ICommand Inv() => new Command("Inv", typeof(DateTime), Array.Empty<Type>(), (x) => 'e');
 
 
         [TestMethod]
@@ -57,6 +58,15 @@ namespace GSR.Tests.CommandRunner
         {
             A().Execute(parameters);
         } // end TestExecuteWrongParameterTypes()
+
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TestExecuteInvalidFunctionReturn()
+        {
+            Inv().Execute(Array.Empty<object>());
+        } // end TestExecuteInvalidFunctionReturn()
 
     } // end class
 } // end namespace
