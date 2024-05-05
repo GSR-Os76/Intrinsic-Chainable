@@ -9,15 +9,15 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestName1()
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
-            Assert.AreEqual(c.Name, nameof(Commands.CommadTets));
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
+            Assert.AreEqual(c.Name, nameof(CommandSetOne.CommadTets));
         } // end TestCodeMultipleParameters()
 
         [TestMethod]
         public void TestName2()
         {
-            ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
-            Assert.AreEqual(c.Name, nameof(Commands.smkdlm));
+            ICommand c = new MethodInfoCommand(CommandSetOne.smkdlmMethod);
+            Assert.AreEqual(c.Name, nameof(CommandSetOne.smkdlm));
         } // end TestCodeSingleParameters()
 
 
@@ -25,22 +25,22 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestCodeNoParameters()
         {
-            ICommand c = new MethodInfoCommand(Commands.ABMethod);
-            Assert.AreEqual(c.Code, $"{nameof(Commands.AB)}()");
+            ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
+            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.AB)}()");
         } // end TestCodeNoParameters()
 
         [TestMethod]
         public void TestCodeMultipleParameters()
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
-            Assert.AreEqual(c.Code, $"{nameof(Commands.CommadTets)}(?, ?)");
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
+            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.CommadTets)}(?, ?)");
         } // end TestCodeMultipleParameters()
 
         [TestMethod]
         public void TestCodeSingleParameters()
         {
-            ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
-            Assert.AreEqual(c.Code, $"{nameof(Commands.smkdlm)}(?)");
+            ICommand c = new MethodInfoCommand(CommandSetOne.smkdlmMethod);
+            Assert.AreEqual(c.Code, $"{nameof(CommandSetOne.smkdlm)}(?)");
         } // end TestCodeSingleParameters()
 
 
@@ -48,21 +48,21 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestVoidReturnType()
         {
-            ICommand c = new MethodInfoCommand(Commands.ABMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
             Assert.AreEqual(c.ReturnType, typeof(void));
         } // end TestVoidReturnType()
 
         [TestMethod]
         public void TestPrimitiveReturnType()
         {
-            ICommand c = new MethodInfoCommand(Commands.smkdlmMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.smkdlmMethod);
             Assert.AreEqual(c.ReturnType, typeof(int));
         } // end TestPrimitiveReturnType()
 
         [TestMethod]
         public void TestReturnType()
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             Assert.AreEqual(c.ReturnType, typeof(StringBuilder));
         } // end TestReturnType()
 
@@ -71,14 +71,14 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestNoParameterTypes() 
         {
-            ICommand c = new MethodInfoCommand(Commands.ABMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
             Assert.AreEqual(c.ParameterTypes.Length, 0);
         } // end TestNoParameterTypes()
 
         [TestMethod]
         public void TestParameterTypes()
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             Type[] expectation = new Type[] {typeof(int), typeof(string)};
             Assert.AreEqual(c.ParameterTypes.Length, expectation.Length);
             for (int i = 0; i < c.ParameterTypes.Length; i++) 
@@ -90,7 +90,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestParameterlessResultlessExecution() 
         {
-            ICommand c = new MethodInfoCommand(Commands.ABMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
             object? r = c.Execute(new object[] { });
             Assert.IsNull(r);
         } // end TestParameterlessResultlessExecution()
@@ -99,7 +99,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow(12, "Some string something", "Some string something 12")]
         public void TestExecution(int a, string b, string result)
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             object? r = c.Execute(new object[] {a, b});
             Assert.AreEqual(r.GetType(), typeof(StringBuilder));
             Assert.AreEqual(r.ToString(), result);
@@ -108,7 +108,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         public void TestSubtypeArg()
         {
-            ICommand c = new MethodInfoCommand(Commands.SMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.SMethod);
             object? r = c.Execute(new object[] { new InvalidOperationException() });
             Assert.AreEqual(r, 0);
         } // end TestSubtypeArg()
@@ -121,7 +121,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow(0, 0, 0, 0)]
         public void TestExecuteWrongParameterCount(params object[] parameters)
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             c.Execute(parameters);
         } // end TestExecuteWrongParameterCount()
 
@@ -132,7 +132,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("", 093)]
         public void TestExecuteWrongParameterTypes(params object[] parameters)
         {
-            ICommand c = new MethodInfoCommand(Commands.CommadTetsMethod);
+            ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
             c.Execute(parameters);
         } // end TestExecuteWrongParameterTypes()
 

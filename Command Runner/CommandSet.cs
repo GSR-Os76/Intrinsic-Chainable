@@ -19,6 +19,10 @@ namespace GSR.CommandRunner
         public CommandSet(IEnumerable<MethodInfo> commandSources) 
         {
             Commands = commandSources.Select((x) => (ICommand)new MethodInfoCommand(x)).ToImmutableList();
+
+            IEnumerable<ICommand> collisions = Commands.Where((x) => Commands.Any((y) => !ReferenceEquals(x, y) && x.Code.Equals(y.Code)));
+            if (collisions.Any())
+                throw new ArgumentException($"Encountered command collisions: {collisions.Aggregate("", (x, y) => x + $"\n\r\tCollision for signature: {y}")}");
         } // end constructors
 
     } // end class
