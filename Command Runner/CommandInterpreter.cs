@@ -12,8 +12,8 @@ namespace GSR.CommandRunner
 
         private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
         private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
-        private const string NUMERIC_START_CHAR_REGEX = @"[0-9]";
-        private const string NUMERIC_REGEX = @"^([0-9]+[sil])|([0-9]+(.[0-9]+)?[fdm])";
+        private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
+        private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((.[0-9]+)?[fdm]))";
 #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
         private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));

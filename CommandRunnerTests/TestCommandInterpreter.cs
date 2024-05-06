@@ -26,7 +26,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("\"\\\"\"", "\"")]
         [DataRow("\"\\\"hey\\\"\"", "\"hey\"")]
         [DataRow("\"943.0()$$\"", "943.0()$$")]
-        public void TestStringLiteralInterpret(string command, string result) => Assert.AreEqual(result, Interpreter().Evaluate(command).Execute());       
+        public void TestStringLiteralInterpret(string command, string result) => Assert.AreEqual(result, Interpreter().Evaluate(command).Execute());
 
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
@@ -73,14 +73,14 @@ namespace GSR.Tests.CommandRunner
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assignment).Execute();
-            ci.Evaluate(command); 
+            ci.Evaluate(command);
         } // end TestVariableThenInvalid()
 
 
 
         [TestMethod]
         [DataRow("$Var1=\"\\\"\"", "$Var1", "\"")]
-        public void TestRetrieveAssignedStringLiteral(string assignment, string command, string result) 
+        public void TestRetrieveAssignedStringLiteral(string assignment, string command, string result)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assignment).Execute();
@@ -107,7 +107,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("$a", "=>", "\"a\"", "\"\"", "")]
         [DataRow("$_UUID", "=>", "\"a\"", "\"b\"", "b")]
         [DataRow("$snake_cased", "=", "\"\"", "\"\\\\hello\\\\\"", @"\hello\")]
-        public void TestSomeAssignThenAssignOverwrite(string varName, string initalAssignOperator, string initial, string then, string expected) 
+        public void TestSomeAssignThenAssignOverwrite(string varName, string initalAssignOperator, string initial, string then, string expected)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate($"{varName}{initalAssignOperator}{initial}").Execute();
@@ -133,7 +133,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         [DataRow("$O=\"0O0\"", "$O.\"Whatever\"")]
-        public void TestVariableChainedToStringLiteral(string assign, string command) 
+        public void TestVariableChainedToStringLiteral(string assign, string command)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assign).Execute();
@@ -153,6 +153,85 @@ namespace GSR.Tests.CommandRunner
             ci.Evaluate(assign).Execute();
             ci.Evaluate(command);
         } // end TestVariableChainedToNumericLiteral()
+
+
+
+        [TestMethod]
+        [DataRow("-32768s", short.MinValue)]
+        [DataRow("-90s", (short)-90)]
+        [DataRow("-0s", (short)0)]
+        [DataRow("0s", (short)0)]
+        [DataRow("56s", (short)56)]
+        [DataRow($"32767s", short.MaxValue)]
+        [DataRow("-2147483648i", int.MinValue)]
+        [DataRow("-9i", -9)]
+        [DataRow("-0i", 0)]
+        [DataRow("0i", 0)]
+        [DataRow("04i", 4)]
+        [DataRow("2147483647i", int.MaxValue)]
+        [DataRow("-9223372036854775808l", long.MinValue)]
+        [DataRow("-932l", -932l)]
+        [DataRow("-0l", 0l)]
+        [DataRow("0l", 0l)]
+        [DataRow("1024l", 1024l)]
+        [DataRow("9223372036854775807l", long.MaxValue)]
+        [DataRow("-9384736478f", -9384736478f)]
+        [DataRow("-4239.4f", -4239.4f)]
+        [DataRow("-0.001f", -.001f)]
+        [DataRow("-0.00f", 0f)]
+        [DataRow("-0f", 0f)]
+        [DataRow("0f", 0f)]
+        [DataRow("0.0f", 0f)]
+        [DataRow("423f", 423f)]
+        [DataRow("5.5f", 5.5f)]
+        [DataRow("2.0f", 2f)]
+        [DataRow("-9384736478d", -9384736478d)]
+        [DataRow("-5003.4d", -5003.4d)]
+        [DataRow("-0.001d", -.001d)]
+        [DataRow("-0.00d", 0d)]
+        [DataRow("-0d", 0d)]
+        [DataRow("0d", 0d)]
+        [DataRow("0.0d", 0d)]
+        [DataRow("423d", 423d)]
+        [DataRow("5.5d", 5.5d)]
+        [DataRow("2.0d", 2d)]
+        public void TestValidNumericLiterals(string command, object expectation)
+        {
+            ICommandInterpreter ci = Interpreter();
+            object? r = ci.Evaluate(command).Execute();
+            Assert.IsNotNull(r);
+            Assert.AreEqual(expectation.GetType(), r.GetType());
+            Assert.AreEqual(expectation, r);
+        } // end TestValidNumericLiterals()
+
+        [TestMethod]
+        public void TestValidDecimalNumericLiterals()
+        {
+            (new Tuple<string, decimal>[]
+            {
+                 Tuple.Create ("-123456789.0m", -123456789m),
+                Tuple.Create ("-1293021m", -1293021m),
+                Tuple.Create ("-90.9m", -90.9m),
+                Tuple.Create ("-0m", 0m),
+                Tuple.Create ("0m", 0m),
+                Tuple.Create ("0.0m", 0m),
+                Tuple.Create ("423m", 423m),
+                Tuple.Create ("5.5m", 5.5m),
+                Tuple.Create ("2.0m", 2m)
+            }).ToList().ForEach((x) =>
+            {
+                string command = x.Item1;
+                object expectation = x.Item2;
+                ICommandInterpreter ci = Interpreter();
+                object? r = ci.Evaluate(command).Execute();
+                Assert.IsNotNull(r);
+                Assert.AreEqual(expectation.GetType(), r.GetType());
+                Assert.AreEqual(expectation, r);
+            });
+        } // end TestValidNumericLiterals()
+
+#warning out of ranges, OverflowException, - Make float/double/decimal overflow.
+#warning test integral disallow decimal places
 
     } // end class
 } // end namespace
