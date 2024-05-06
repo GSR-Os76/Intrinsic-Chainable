@@ -11,9 +11,11 @@ namespace GSR.CommandRunner
         private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
         private const string MEMBER_NAME_REGEX = @"^(_a-zA-Z)+(_0-9a-zA-z)*";
 #warning, add more escapes;
-        private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create("\\\\", "\\"), Tuple.Create("\\\"", "\"") };
-        private static readonly string UNTIL_END_QUOTE = @"^([^\\""]" + ESCAPE_REPLACEMENTS.Select((x) =>x.Item1).Aggregate("|", (x, y) => $"{x}{y}|")[..^1] + @")*(?="")";
+        private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
+        private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
 
+        private static readonly string UNTIL_END_QUOTE = @"^([^\\""]" + ESCAPE_REPLACEMENTS_R.Select((x) => x.Item1).Aggregate("|", (x, y) => $"{x}({y})|")[..^1] + @")*";
+        
         private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(CommandInterpreter));
         private readonly ICommandSet m_commands;
         private readonly  ISessionContext m_sessionContext;
@@ -59,26 +61,17 @@ namespace GSR.CommandRunner
         } // end Evaluate()
 
 
-        private ICommand ReadCommand(string input) 
+        private ICommand ReadCommand(string input, Type? chainedType = null, object? chainedOn = null) 
         {
             string parse = input.Trim();
             // if 0-9 numeric
             // if " string
             if (parse[0].Equals('"'))
             {
-                parse = parse[1..];
-                string value = Regex.Match(parse, UNTIL_END_QUOTE).Value;
-                value = ESCAPE_REPLACEMENTS.Aggregate(value, (x, y) => x.Replace(y.Item1, y.Item2));
+                if (chainedType != null)
+                    throw new InvalidOperationException("Can't chain to string literal.");
 
-                parse = Regex.Replace(parse, UNTIL_END_QUOTE, "")[1..].TrimStart();
-                if (parse.Equals(""))
-                    return CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
-                else if (parse[0].Equals('.'))
-                {
-# warning, begin method chain.
-                }
-                else
-                    throw new InvalidOperationException($"Couldn't interpret value: \"{input}\"");
+                return ReadStringLiteral(input);
             }
             else if (parse[0].Equals('$'))
             {
@@ -100,6 +93,31 @@ namespace GSR.CommandRunner
                 }*/
             return null;
         } // end ReadCommand()
+
+        private ICommand ReadStringLiteral(string input) 
+        {
+            string parse = input.Trim();
+
+            parse = parse[1..];
+            string value = Regex.Match(parse, UNTIL_END_QUOTE).Value;
+            value = ESCAPE_REPLACEMENTS.Aggregate(value, (x, y) => x.Replace(y.Item1, y.Item2));
+
+            parse = Regex.Replace(parse, UNTIL_END_QUOTE, string.Empty);
+            if (parse.Length == 0 || !parse[0].Equals('"'))
+                throw new InvalidOperationException("Invalid string literal, didn't find expectedend quote ");
+
+            parse = parse[1..].TrimStart();
+            
+            if (parse.Equals(string.Empty))
+                return CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
+            else if (parse[0].Equals('.'))
+            {
+                parse = parse[1..].TrimStart();
+                return ReadCommand(parse, typeof(string), value);
+            }
+            else
+                throw new InvalidOperationException($"Couldn't interpret value: \"{input}\"");
+        } // end ReadStringLiteral
 
 
 

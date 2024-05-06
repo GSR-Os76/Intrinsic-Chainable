@@ -1,4 +1,5 @@
 ﻿using GSR.CommandRunner;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace GSR.Tests.CommandRunner
 {
@@ -15,10 +16,19 @@ namespace GSR.Tests.CommandRunner
         [DataRow("\"\\\"\"", "\"")]
         [DataRow("\"\\\"hey\\\"\"", "\"hey\"")]
         [DataRow("\"943.0()$$\"", "943.0()$$")]
-        public void TestStringLiteralInterpret(string command, string result) 
-        {
-            Assert.AreEqual(result, Interpreter().Evaluate(command).Execute());       
-        } // end TestStringLiteralInterpret()
+        public void TestStringLiteralInterpret(string command, string result) => Assert.AreEqual(result, Interpreter().Evaluate(command).Execute());       
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TestChainToStringLiteral() => Interpreter().Evaluate("\"a\".\"chainedTo\"");
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("\"")]
+        [DataRow("\"\\\"")]
+        [DataRow("\"dsknjefk\\f")]
+        public void TestUnclosedStringLiteral(string command) => Interpreter().Evaluate(command);
+
 
     } // end class
 } // end namespace
