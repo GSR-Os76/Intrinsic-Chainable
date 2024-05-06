@@ -9,6 +9,8 @@ namespace GSR.CommandRunner
 
 
 
+        public CommandSet() : this(new List<MethodInfo>()){ } // end constructor
+
         public CommandSet(Type commandSource) : this(new List<Type>() { commandSource }) { } // end constructor
 
         public CommandSet(IEnumerable<Type> commandSources) : this(commandSources
