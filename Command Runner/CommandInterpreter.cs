@@ -10,7 +10,9 @@ namespace GSR.CommandRunner
 
         private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
         private const string MEMBER_NAME_REGEX = @"^(_a-zA-Z)+(_0-9a-zA-z)*";
-        private const string UNTIL_END_QUOTE = @"^([^\\""]|\\""|\\\\)*(?="")";
+#warning, add more escapes;
+        private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create("\\\\", "\\"), Tuple.Create("\\\"", "\"") };
+        private static readonly string UNTIL_END_QUOTE = @"^([^\\""]" + ESCAPE_REPLACEMENTS.Select((x) =>x.Item1).Aggregate("|", (x, y) => $"{x}{y}|")[..^1] + @")*(?="")";
 
         private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(CommandInterpreter));
         private readonly ICommandSet m_commands;
@@ -65,7 +67,9 @@ namespace GSR.CommandRunner
             if (parse[0].Equals('"'))
             {
                 parse = parse[1..];
-                string value = Regex.Match(parse, UNTIL_END_QUOTE).Value.Replace("\\\"", "\"").Replace("\\\\", "\\");
+                string value = Regex.Match(parse, UNTIL_END_QUOTE).Value;
+                value = ESCAPE_REPLACEMENTS.Aggregate(value, (x, y) => x.Replace(y.Item1, y.Item2));
+
                 parse = Regex.Replace(parse, UNTIL_END_QUOTE, "")[1..].TrimStart();
                 if (parse.Equals(""))
                     return CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
