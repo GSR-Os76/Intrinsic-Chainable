@@ -8,7 +8,7 @@ namespace GSR.Tests.CommandRunner
     {
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(UndefinedMemberException))]
         [DataRow("")]
         [DataRow("fjisoroeiwq ")]
         [DataRow("_e,l_ dlf")]
@@ -16,7 +16,7 @@ namespace GSR.Tests.CommandRunner
         public void TestGetValueNonExistant(string name) => new SessionContext().GetValue(name, typeof(object));
 
         [TestMethod]
-        [ExpectedException(typeof (InvalidOperationException))]
+        [ExpectedException(typeof (TypeMismatchException))]
         [DataRow("k", 90, typeof(float))]
         public void TestGetValueWrongType(string name, object value, Type wrongGuess) 
         {

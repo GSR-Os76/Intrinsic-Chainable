@@ -10,11 +10,11 @@
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (!q.Any())
-                throw new InvalidOperationException($"No varible found: {name}");
+                throw new UndefinedMemberException($"No varible found: {name}");
 
             Variable v = q.First();
             if (!targetType.IsAssignableFrom(v.Type))
-                throw new InvalidOperationException($"Variable type mismatch, got: {v.Type}, expected: {targetType}");
+                throw new TypeMismatchException($"Variable type mismatch, got: {v.Type}, expected: {targetType}");
 
             return v.Value;
         } // end GetValue()
@@ -23,9 +23,9 @@
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (q.Any())
-                q.First().Update(value.GetType(), value);
+                q.First().Update(value?.GetType(), value);
             else
-                m_variables.Add(new(name, value.GetType(), value));
+                m_variables.Add(new(name, value?.GetType(), value));
         } // end SetValue()
 
     } // end class

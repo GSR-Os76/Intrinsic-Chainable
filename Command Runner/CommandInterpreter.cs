@@ -36,19 +36,22 @@ namespace GSR.CommandRunner
         public ICommand Evaluate(string input) 
         {
             string parse = input.Trim();
+            if (parse.Length == 0)
+                throw new InvalidSyntaxException("Command was empty.");
+
             if (parse[0].Equals('$')) 
             {
                 parse = parse[1..];
                 string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
                 parse = parse.Replace(MEMBER_NAME_REGEX, "").TrimStart();
 
-                if (parse[..2].Equals("=>"))
+                if (parse.Length >= 2 && parse[..2].Equals("=>"))
                 {
                     parse = parse[2..].TrimStart();
                     ICommand val = ReadCommand(parse);
                     return CommandFor(FUNCTION_ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val)); 
                 }
-                else if (parse[0].Equals('='))
+                else if (parse.Length >= 1 && parse[0].Equals('='))
                 {
                     parse = parse[1..].TrimStart();
                     ICommand val = ReadCommand(parse);
@@ -77,9 +80,12 @@ namespace GSR.CommandRunner
             {
                 parse = parse[1..];
                 string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
-                parse = parse.Replace(MEMBER_NAME_REGEX, "").TrimStart();
-
                 object? val = m_sessionContext.GetValue(varName, typeof(object));
+                parse = parse.Replace(MEMBER_NAME_REGEX, string.Empty).TrimStart();
+
+                if (parse.Length != 0 && !(parse[0].Equals('(') || parse[0].Equals('.')))
+                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
+
                 // try return value, or if invoked holding command execute command.
 
             }
@@ -104,7 +110,7 @@ namespace GSR.CommandRunner
 
             parse = Regex.Replace(parse, UNTIL_END_QUOTE, string.Empty);
             if (parse.Length == 0 || !parse[0].Equals('"'))
-                throw new InvalidOperationException("Invalid string literal, didn't find expectedend quote ");
+                throw new InvalidSyntaxException("Invalid string literal, didn't find expectedend quote ");
 
             parse = parse[1..].TrimStart();
             
@@ -116,7 +122,7 @@ namespace GSR.CommandRunner
                 return ReadCommand(parse, typeof(string), value);
             }
             else
-                throw new InvalidOperationException($"Couldn't interpret value: \"{input}\"");
+                throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadStringLiteral
 
 

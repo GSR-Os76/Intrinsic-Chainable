@@ -8,6 +8,16 @@ namespace GSR.Tests.CommandRunner
     {
         public CommandInterpreter Interpreter() => new CommandInterpreter(new CommandSet());
 
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("")]
+        [DataRow("  \n")]
+        [DataRow("\t")]
+        public void TestEmptyCommand(string command) => Interpreter().Evaluate(command);
+
+
         // test string literal
         [TestMethod]
         [DataRow("\"st\"", "st")]
@@ -23,11 +33,20 @@ namespace GSR.Tests.CommandRunner
         public void TestChainToStringLiteral() => Interpreter().Evaluate("\"a\".\"chainedTo\"");
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("\"")]
         [DataRow("\"\\\"")]
         [DataRow("\"dsknjefk\\f")]
         public void TestUnclosedStringLiteral(string command) => Interpreter().Evaluate(command);
+
+
+
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("$a")]
+        [DataRow("$Ldk")]
+        [DataRow("$_o")]
+        public void TestUndeclaredVariableCall(string command) => Interpreter().Evaluate(command);
 
 
     } // end class
