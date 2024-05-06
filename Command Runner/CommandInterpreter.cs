@@ -7,6 +7,7 @@ namespace GSR.CommandRunner
         private const string FUNCTION_ASSIGN_TYPE = "fa";
         private const string ASSIGN_TYPE = "a";
         private const string STRING_LITERAL_TYPE = "sl";
+        private const string VARIABLE_UNWRAP_TYPE = "v";
 
         private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
         private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
@@ -87,8 +88,8 @@ namespace GSR.CommandRunner
                 // try return value, or if invoked holding command execute command.
 
                 if (parse.Equals(string.Empty)) 
-                { 
-                
+                {
+                    return CommandFor(VARIABLE_UNWRAP_TYPE, val?.GetType() ?? typeof(object),  () => val);
                 }
                 else if (parse[0].Equals('('))
                 {
