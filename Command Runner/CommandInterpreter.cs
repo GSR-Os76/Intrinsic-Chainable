@@ -9,7 +9,7 @@ namespace GSR.CommandRunner
         private const string STRING_LITERAL_TYPE = "sl";
 
         private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
-        private const string MEMBER_NAME_REGEX = @"^(_a-zA-Z)+(_0-9a-zA-z)*";
+        private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
 #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
         private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
@@ -43,7 +43,7 @@ namespace GSR.CommandRunner
             {
                 parse = parse[1..];
                 string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
-                parse = parse.Replace(MEMBER_NAME_REGEX, "").TrimStart();
+                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
 
                 if (parse.Length >= 2 && parse[..2].Equals("=>"))
                 {
@@ -81,12 +81,25 @@ namespace GSR.CommandRunner
                 parse = parse[1..];
                 string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
                 object? val = m_sessionContext.GetValue(varName, typeof(object));
-                parse = parse.Replace(MEMBER_NAME_REGEX, string.Empty).TrimStart();
+                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
 
-                if (parse.Length != 0 && !(parse[0].Equals('(') || parse[0].Equals('.')))
-                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
 
                 // try return value, or if invoked holding command execute command.
+
+                if (parse.Equals(string.Empty)) 
+                { 
+                
+                }
+                else if (parse[0].Equals('('))
+                {
+
+                }
+                else if (parse[0].Equals('.'))
+                {
+
+                }
+                else
+                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
 
             }
 
