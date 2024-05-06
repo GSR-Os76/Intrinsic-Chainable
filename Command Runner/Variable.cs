@@ -4,6 +4,7 @@
     {
         public string Name { get; }
 
+#warning possibly remove type, in this case we have the value and so can extract it from that, unlike with parameters and returns
         public Type? Type { get; private set; }
 
         public object? Value { get; private set; }

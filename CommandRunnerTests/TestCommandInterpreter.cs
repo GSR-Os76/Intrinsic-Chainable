@@ -130,5 +130,29 @@ namespace GSR.Tests.CommandRunner
             Assert.AreEqual(expected, ((ICommand)e1).Execute());
         } // end TestSomeAssignThenFunctionAssignOverwrite()
 
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("$O=\"0O0\"", "$O.\"Whatever\"")]
+        public void TestVariableChainedToStringLiteral(string assign, string command) 
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestVariableChainedToStringLiteral()
+
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("$O=\"0O0\"", "$O.0")]
+        [DataRow("$O=\"0O0\"", "$O.9")]
+        [DataRow("$O=\"0O0\"", "$O.68")]
+        public void TestVariableChainedToNumericLiteral(string assign, string command)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestVariableChainedToNumericLiteral()
+
     } // end class
 } // end namespace
