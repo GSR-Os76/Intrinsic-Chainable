@@ -254,7 +254,20 @@ namespace GSR.Tests.CommandRunner
                  $"18{new string('0', 307)}d",
             }).ToList().ForEach((x) => Interpreter().Evaluate(x));
         } // end TestOverflowFloatAndDecimalNumericLiteral
-#warning test integral disallow decimal places
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("1.7s")]
+        [DataRow("1.0s")]
+        [DataRow("-1.9s")]
+        [DataRow("1.1i")]
+        [DataRow("1.0i")]
+        [DataRow("-1.0i")]
+        [DataRow("134.7l")]
+        [DataRow("8.0l")]
+        [DataRow("-0.990l")]
+        public void TestIntegralNumericLiteralDisallowsDecimals(string command) => Interpreter().Evaluate(command);
 
     } // end class
 } // end namespace
