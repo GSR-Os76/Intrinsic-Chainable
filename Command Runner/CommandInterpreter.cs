@@ -142,6 +142,9 @@ namespace GSR.CommandRunner
                 'm' => decimal.Parse(rVal[..^1]),
                 _ => throw new InvalidStateException("numeric literal type indentification failed, this shouldn't happen"),
             };
+
+            if (value.Equals(float.PositiveInfinity))
+                throw new OverflowException($"\"{rVal}\" is too small or too large.");
             
             if (parse.Equals(string.Empty)) 
                 return CommandFor(NUMERIC_LITERAL_TYPE, value.GetType(), () => value);

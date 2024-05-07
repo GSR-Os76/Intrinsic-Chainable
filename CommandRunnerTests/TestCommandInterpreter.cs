@@ -230,7 +230,30 @@ namespace GSR.Tests.CommandRunner
             });
         } // end TestValidNumericLiterals()
 
-#warning out of ranges, OverflowException, - Make float/double/decimal overflow.
+        [TestMethod]
+        [ExpectedException(typeof(OverflowException))]
+        [DataRow("-32769s")]
+        [DataRow($"32768s")]
+        [DataRow("-2147483649i")]
+        [DataRow("2147483648i")]
+        [DataRow("-9223372036854775809l")]
+        [DataRow("9223372036854775808l")]
+        [DataRow("-79228162514264337593543950336m")]
+        [DataRow("79228162514264337593543950336m")]
+        public void TestOverflowNumericLiterals(string command) => Interpreter().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(OverflowException))]
+        public void TestOverflowFloatAndDecimalNumericLiteral() 
+        {
+            (new string[]
+            {
+                 $"-35{new string('0', 37)}f",
+                 $"35{new string('0', 37)}f",
+                 $"-18{new string('0', 307)}d",
+                 $"18{new string('0', 307)}d",
+            }).ToList().ForEach((x) => Interpreter().Evaluate(x));
+        } // end TestOverflowFloatAndDecimalNumericLiteral
 #warning test integral disallow decimal places
 
     } // end class
