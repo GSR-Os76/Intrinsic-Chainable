@@ -270,5 +270,46 @@ namespace GSR.Tests.CommandRunner
         public void TestIntegralNumericLiteralDisallowsDecimals(string command) => Interpreter().Evaluate(command);
 
 #warning test lots of bad syntax input. like "903-k42d" or "$-30flp 0"
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("$Y=\"ll_o27-=d\"", "$Y()")]
+        public void TestInvokeNonCommandVariable(string assign, string command) 
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestInvokeNonCommandVariable()
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("$Y=>\"poiuytfdx nmkjhyt\"", "\"Some string value\".$Y()")]
+        [DataRow("$Y=>290i", "\"Se\".$Y()")]
+        [DataRow("$Y=>\"(_#KD(\"", "26.12056f.$Y()")]
+        [DataRow("$Y=>0f", "23m.$Y()")]
+        public void TestChainToParameterlessCommandVariable(string assign, string command) 
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // endTestChainToParameterlessCommandVariable
+
+#warning test chain to command variable type mismatchs;
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("$m_Sar=>\"\"", "$m_Sar()5")]
+        [DataRow("$m_Sar=>\"\"", "$m_Sar();")]
+        [DataRow("$m_Sar=>\"\"", "$m_Sar()m")]
+        [DataRow("$m_Sar=>\"\"", "$m_Sar()^")]
+        public void TestVariableInvokeThenInvalidCharacter(string assign, string command)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestVariableInvokeThenInvalidCharacter()
+
+
+
     } // end class
 } // end namespace

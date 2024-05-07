@@ -71,19 +71,19 @@ namespace GSR.CommandRunner
         } // end Evaluate()
 
 
-        private ICommand ReadCommand(string input, Type? chainedType = null, object? chainedOn = null) 
+        private ICommand ReadCommand(string input, bool chainedType = false, object? chainedOn = null) 
         {
             string parse = input.Trim();
             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
-                if (chainedType != null)
+                if (chainedType)
                     throw new InvalidOperationException("Can't chain to numeric literal.");
 
                 return ReadNumericLiteral(input);
             }
             else if (parse[0].Equals('"'))
             {
-                if (chainedType != null)
+                if (chainedType)
                     throw new InvalidOperationException("Can't chain to string literal.");
 
                 return ReadStringLiteral(input);
@@ -95,19 +95,54 @@ namespace GSR.CommandRunner
                 object? val = m_sessionContext.GetValue(varName, typeof(object));
                 parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
 
-
-                // try return value, or if invoked holding command execute command.
-
                 if (parse.Equals(string.Empty)) 
                     return CommandFor(VARIABLE_UNWRAP_TYPE, val?.GetType() ?? typeof(object),  () => val);
                 else if (parse[0].Equals('('))
                 {
-                    // if command try to invoke
+                    if (!typeof(ICommand).IsAssignableFrom(val?.GetType()))
+                        throw new InvalidOperationException("Can't invoke non-command varaible.");
+
+                    parse = parse[1..].TrimStart();
+                    ICommand varV = (ICommand)val;
+
+                    if (parse[0].Equals(')'))
+                    {
+                        parse = parse[1..].TrimStart();
+                        if (chainedType)
+                        {
+                            // refactor out probably.
+                            if (!(varV.ParameterTypes.Length >= 1))
+                                throw new InvalidOperationException("Can't chain to function without a parameter");
+
+                            if (chainedOn != null && !varV.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
+                                throw new TypeMismatchException($"Chained type mismatched. Expected {varV.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
+                        }
+
+                        if (parse.Equals(string.Empty))
+                        {
+                            // if ChainType first param ChainOn
+                            // commandFor
+                        }
+                        else if (parse[0].Equals('.')) 
+                        {
+                            // if ChainType first param ChainOn
+                            // commandFor then chain
+                        }
+                        else
+                            throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
+                    }
+                    else 
+                    {
+                        // capture arguments etc
+                        //ARGUMENT_REGEX
+                        // if command try to invoke
+                    }
                 }
                 else if (parse[0].Equals('.'))
                 {
+                    // chain the variable
                     parse = parse[1..].TrimStart();
-                    return ReadCommand(parse, typeof(object), val);
+                    return ReadCommand(parse, true, val);
                 }
                 else
                     throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
@@ -157,7 +192,7 @@ namespace GSR.CommandRunner
             else if (parse[0].Equals('.'))
             {
                 parse = parse[1..].TrimStart();
-                return ReadCommand(parse, value.GetType(), value);
+                return ReadCommand(parse, true, value);
             }
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
@@ -185,7 +220,7 @@ namespace GSR.CommandRunner
             else if (parse[0].Equals('.'))
             {
                 parse = parse[1..].TrimStart();
-                return ReadCommand(parse, typeof(string), value);
+                return ReadCommand(parse, true, value);
             }
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
