@@ -13,7 +13,7 @@
                 throw new UndefinedMemberException($"No varible found: {name}");
 
             Variable v = q.First();
-            if (!targetType.IsAssignableFrom(v.Type))
+            if (v.Type != null && !targetType.IsAssignableFrom(v.Type))
                 throw new TypeMismatchException($"Variable type mismatch, got: {v.Type}, expected: {targetType}");
 
             return v.Value;

@@ -34,7 +34,7 @@
                     throw new InvalidOperationException($"Type error at argument {i + 1}:\n\r\t Expected {ParameterTypes[i]} or subtype, got {parameters[i]?.GetType()}");
 
             object? result = m_function.Invoke(parameters);
-            if (!ReturnType.IsAssignableFrom(result?.GetType()) && !(ReturnType == typeof(void) && result == null))
+            if (result != null && !ReturnType.IsAssignableFrom(result?.GetType()))
                 throw new InvalidOperationException($"Invalid command function return type. Expected {ReturnType} or subtype,  got {result?.GetType()}");
 
             return result;
