@@ -44,10 +44,19 @@ namespace GSR.CommandRunner
         public ICommand Evaluate(string input) 
         {
             string parse = input.Trim();
+            
+            
+            return _Evaluate(parse);
+        } // end Evaluate()
+
+
+        private ICommand _Evaluate(string input, bool chainedType = false, object? chainedOn = null) 
+        {
+            string parse = input.Trim();
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Command was empty.");
 
-            if (parse[0].Equals('$')) 
+            if (parse[0].Equals('$'))
             {
                 parse = parse[1..];
                 string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
@@ -56,26 +65,19 @@ namespace GSR.CommandRunner
                 if (parse.Length >= 2 && parse[..2].Equals("=>"))
                 {
                     parse = parse[2..].TrimStart();
-                    ICommand val = ReadCommand(parse);
-                    return CommandFor(FUNCTION_ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val)); 
+                    ICommand val = _Evaluate(parse);
+                    return CommandFor(FUNCTION_ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val));
                 }
                 else if (parse.Length >= 1 && parse[0].Equals('='))
                 {
                     parse = parse[1..].TrimStart();
-                    ICommand val = ReadCommand(parse);
+                    ICommand val = _Evaluate(parse);
                     return CommandFor(ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val.Execute(Array.Empty<object>())));
                 }
                 parse = $"${varName}{parse}";
             }
-            
-            return ReadCommand(parse);
-        } // end Evaluate()
 
-
-        private ICommand ReadCommand(string input, bool chainedType = false, object? chainedOn = null) 
-        {
-            string parse = input.Trim();
-            if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
+             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
                 if (chainedType)
                     throw new InvalidOperationException("Can't chain to numeric literal.");
@@ -130,9 +132,9 @@ namespace GSR.CommandRunner
                         {
                             parse = parse[1..].TrimStart();
                             if (chainedType)
-                                return ReadCommand(parse, true,  varV.Execute());
+                                return _Evaluate(parse, true,  varV.Execute());
                             else
-                                return ReadCommand(parse, true, varV.Execute());
+                                return _Evaluate(parse, true, varV.Execute());
                         }
                         else
                             throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
@@ -149,7 +151,7 @@ namespace GSR.CommandRunner
                 {
                     // chain the variable
                     parse = parse[1..].TrimStart();
-                    return ReadCommand(parse, true, val);
+                    return _Evaluate(parse, true, val);
                 }
                 else
                     throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
@@ -199,7 +201,7 @@ namespace GSR.CommandRunner
             else if (parse[0].Equals('.'))
             {
                 parse = parse[1..].TrimStart();
-                return ReadCommand(parse, true, value);
+                return _Evaluate(parse, true, value);
             }
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
@@ -227,15 +229,18 @@ namespace GSR.CommandRunner
             else if (parse[0].Equals('.'))
             {
                 parse = parse[1..].TrimStart();
-                return ReadCommand(parse, true, value);
+                return _Evaluate(parse, true, value);
             }
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadStringLiteral
 
-#warning, allow variable assignment interpretation anywhere. 
+
+
 #warning .> vs . for chaining. first passes function, parameterize or not; second pass value of function, or if has ? parameters creates a command that will execute when given args to match them
 #warning > before argument as well.
+
+
 
         private ICommand CommandFor(string type, Action value) => new Command($"{type}_{++m_uniqueNumber}", typeof(void), Array.Empty<Type>(), (x) => { value(); return null; });
 

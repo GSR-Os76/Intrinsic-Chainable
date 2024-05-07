@@ -244,7 +244,7 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [ExpectedException(typeof(OverflowException))]
-        public void TestOverflowFloatAndDecimalNumericLiteral() 
+        public void TestOverflowFloatAndDecimalNumericLiteral()
         {
             (new string[]
             {
@@ -274,7 +274,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         [DataRow("$Y=\"ll_o27-=d\"", "$Y()")]
-        public void TestInvokeNonCommandVariable(string assign, string command) 
+        public void TestInvokeNonCommandVariable(string assign, string command)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assign).Execute();
@@ -287,7 +287,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("$Y=>290i", "\"Se\".$Y()")]
         [DataRow("$Y=>\"(_#KD(\"", "26.12056f.$Y()")]
         [DataRow("$Y=>0f", "23m.$Y()")]
-        public void TestChainToParameterlessCommandVariable(string assign, string command) 
+        public void TestChainToParameterlessCommandVariable(string assign, string command)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assign).Execute();
@@ -312,7 +312,7 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         [DataRow("$lT9T=> \"7\"", "$lT9T()", "7")]
         [DataRow("$opj  => 256s", "$opj()", (short)256)]
-        public void TestVariableInvoke(string assign, string command, object expectation) 
+        public void TestVariableInvoke(string assign, string command, object expectation)
         {
             ICommandInterpreter ci = Interpreter();
             ci.Evaluate(assign).Execute();
@@ -321,5 +321,79 @@ namespace GSR.Tests.CommandRunner
 
 
 #warning test for chained variable invoke;
+
+
+
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("$A => $B = \"    \"", "$B")]
+        [DataRow("$A => $C0_ => \"AREWETHEREYET\"", "$C0_")]
+        public void TestVariableAssignmentFunctionAssignmentUninvoked(string assign, string fails)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(fails);
+        } // end TestVariableAssignmentFunctionAssignmentUninvoked()
+
+
+        [TestMethod]
+        [DataRow("$A => $B = 80d", "$A()", "$B", 80d)]
+        public void TestVariableAssignmentFunctionAssignmentInvoked(string assign, string execute, string testCommand, object expected)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(execute).Execute();
+            Assert.AreEqual(expected, ci.Evaluate(testCommand).Execute());
+        } // end TestVariableAssignmentFunctionAssignmentInvoked()
+
+        [TestMethod]
+        [DataRow("$A => $B => 80d", "$A()", "$B", 80d)]
+        public void TestVariableFunctionAssignmentFunctionAssignmentInvoked(string assign, string execute, string testCommand, object expected)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(execute).Execute();
+            object? f = ci.Evaluate(testCommand).Execute();
+            Assert.IsNotNull(f);
+            Assert.AreEqual(expected, ((ICommand)f).Execute());
+        } // end TestVariableFunctionAssignmentFunctionAssignmentInvoked()
+
+        [TestMethod]
+        [DataRow("$R = 0l", "$F => $R = \"\"", "$F()", "$R")]
+        public void TestVariableReassignmentFunctionAssignmentInvoked(string assign1, string assign2, string execute2, string unwrapMaybeReassignedVariable)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign1).Execute();
+            ci.Evaluate(assign2).Execute();
+            object? before = ci.Evaluate(unwrapMaybeReassignedVariable).Execute();
+            ci.Evaluate(execute2).Execute();
+            Assert.AreNotEqual(before, ci.Evaluate(unwrapMaybeReassignedVariable).Execute());
+        } // end TestVariableReassignmentFunctionAssignmentInvoked()
+
+
+
+        [TestMethod]
+        [DataRow("$ShouldBeNull = $NN = 2049.4f", "$ShouldBeNull", "$NN", 2049.4f)]
+        public void TestVariableAssignmentAssignmentLeavesVariableNull(string assign, string nullVar, string notNullVar, object notNullVal)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            Assert.IsNull(ci.Evaluate(nullVar).Execute());
+            Assert.AreEqual(ci.Evaluate(notNullVar).Execute(), notNullVal);
+        } // end TestVariableAssignmentAssignmentLeavesVariableNull()
+
+        [TestMethod]
+        [DataRow("$R = 0l", "$F = $R = \"\"", "$R")]
+        public void TestVariableReassignmentAssignmentNeedsNoInvoke(string assign1, string assign2, string unwrapMaybeReassignedVariable)
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign1).Execute();
+            object? before = ci.Evaluate(unwrapMaybeReassignedVariable).Execute();
+            ci.Evaluate(assign2).Execute();
+            Assert.AreNotEqual(before, ci.Evaluate(unwrapMaybeReassignedVariable).Execute());
+        } // end TestVariableReassignmentAssignmentNeedsNoInvoke()
+
+        // test regular s null assign
+
     } // end class
 } // end namespace
