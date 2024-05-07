@@ -309,7 +309,17 @@ namespace GSR.Tests.CommandRunner
             ci.Evaluate(command);
         } // end TestVariableInvokeThenInvalidCharacter()
 
+        [TestMethod]
+        [DataRow("$lT9T=> \"7\"", "$lT9T()", "7")]
+        [DataRow("$opj  => 256s", "$opj()", (short)256)]
+        public void TestVariableInvoke(string assign, string command, object expectation) 
+        {
+            ICommandInterpreter ci = Interpreter();
+            ci.Evaluate(assign).Execute();
+            Assert.AreEqual(expectation, ci.Evaluate(command).Execute());
+        } // end TestVariableInoke()
 
 
+#warning test for chained variable invoke;
     } // end class
 } // end namespace

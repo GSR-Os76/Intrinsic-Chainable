@@ -8,9 +8,10 @@ namespace GSR.CommandRunner
         private const string ASSIGN_TYPE = "a";
         private const string STRING_LITERAL_TYPE = "sl";
         private const string NUMERIC_LITERAL_TYPE = "nl";
-        private const string VARIABLE_UNWRAP_TYPE = "v";
+        private const string VARIABLE_UNWRAP_TYPE = "vu";
+        private const string VARIABLE_INVOKE_TYPE = "ve";
 
-        private const string META_COMMAND_START_REGEX = @"^~\s*.\s*";
+        private const string META_COMMAND_START_REGEX = @"^~\s*\.\s*";
         private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
@@ -120,19 +121,25 @@ namespace GSR.CommandRunner
 
                         if (parse.Equals(string.Empty))
                         {
-                            // if ChainType first param ChainOn
-                            // commandFor
+                            if (chainedType)
+                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, chainedOn, () => varV.Execute());
+                            else
+                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, () => varV.Execute());
                         }
                         else if (parse[0].Equals('.')) 
                         {
-                            // if ChainType first param ChainOn
-                            // commandFor then chain
+                            parse = parse[1..].TrimStart();
+                            if (chainedType)
+                                return ReadCommand(parse, true,  varV.Execute());
+                            else
+                                return ReadCommand(parse, true, varV.Execute());
                         }
                         else
                             throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
                     }
                     else 
                     {
+#warning
                         // capture arguments etc
                         //ARGUMENT_REGEX
                         // if command try to invoke
@@ -226,11 +233,22 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadStringLiteral
 
-
+#warning, allow variable assignment interpretation anywhere. 
+#warning .> vs . for chaining. first passes function, parameterize or not; second pass value of function, or if has ? parameters creates a command that will execute when given args to match them
+#warning > before argument as well.
 
         private ICommand CommandFor(string type, Action value) => new Command($"{type}_{++m_uniqueNumber}", typeof(void), Array.Empty<Type>(), (x) => { value(); return null; });
 
         private ICommand CommandFor(string type, Type returnType, Func<object?> value) => new Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
+
+        private ICommand CommandFor(string type, Type returnType, object? chainedOn, Func<object?> value)
+        {
+            throw new NotImplementedException();
+            // included chained on ? parameters in results
+            // Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
+        } // end CommandForChained()
+
+        private ICommand CommandForFunctionChained(string type, Type returnType, object? chainedOn, object?[] args, Func<object?> value) => throw new NotImplementedException();
 
     } // end class
 } // end namespace
