@@ -23,17 +23,17 @@ namespace GSR.CommandRunner
         private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
 
         private static readonly string UNTIL_END_QUOTE_REGEX = @"^([^\\""]" + ESCAPE_REPLACEMENTS_R.Select((x) => x.Item1).Aggregate("|", (x, y) => $"{x}({y})|")[..^1] + @")*";
-        
+
         private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(CommandInterpreter));
         private readonly ICommandSet m_commands;
-        private readonly  ISessionContext m_sessionContext;
+        private readonly ISessionContext m_sessionContext;
         private int m_uniqueNumber = 0;
 
 
 
         public CommandInterpreter(ICommandSet defaultCommands) : this(defaultCommands, new SessionContext()) { } // end constructor
 
-        public CommandInterpreter(ICommandSet defaultCommands, ISessionContext sessionContext) 
+        public CommandInterpreter(ICommandSet defaultCommands, ISessionContext sessionContext)
         {
             m_commands = defaultCommands;
             m_sessionContext = sessionContext;
@@ -41,43 +41,16 @@ namespace GSR.CommandRunner
 
 
 
-        public ICommand Evaluate(string input) 
-        {
-            string parse = input.Trim();
-            
-            
-            return _Evaluate(parse);
-        } // end Evaluate()
+        public ICommand Evaluate(string input) => _Evaluate(input);
 
 
-        private ICommand _Evaluate(string input, bool chainedType = false, object? chainedOn = null) 
+        private ICommand _Evaluate(string input, bool chainedType = false, object? chainedOn = null)
         {
             string parse = input.Trim();
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Command was empty.");
 
-            if (parse[0].Equals('$'))
-            {
-                parse = parse[1..];
-                string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
-                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
-
-                if (parse.Length >= 2 && parse[..2].Equals("=>"))
-                {
-                    parse = parse[2..].TrimStart();
-                    ICommand val = _Evaluate(parse);
-                    return CommandFor(FUNCTION_ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val));
-                }
-                else if (parse.Length >= 1 && parse[0].Equals('='))
-                {
-                    parse = parse[1..].TrimStart();
-                    ICommand val = _Evaluate(parse);
-                    return CommandFor(ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val.Execute(Array.Empty<object>())));
-                }
-                parse = $"${varName}{parse}";
-            }
-
-             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
+            if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
                 if (chainedType)
                     throw new InvalidOperationException("Can't chain to numeric literal.");
@@ -92,70 +65,7 @@ namespace GSR.CommandRunner
                 return ReadStringLiteral(input);
             }
             else if (parse[0].Equals('$'))
-            {
-                parse = parse[1..];
-                string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
-                object? val = m_sessionContext.GetValue(varName, typeof(object));
-                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
-
-                if (parse.Equals(string.Empty)) 
-                    return CommandFor(VARIABLE_UNWRAP_TYPE, val?.GetType() ?? typeof(object),  () => val);
-                else if (parse[0].Equals('('))
-                {
-                    if (!typeof(ICommand).IsAssignableFrom(val?.GetType()))
-                        throw new InvalidOperationException("Can't invoke non-command varaible.");
-
-                    parse = parse[1..].TrimStart();
-                    ICommand varV = (ICommand)val;
-
-                    if (parse[0].Equals(')'))
-                    {
-                        parse = parse[1..].TrimStart();
-                        if (chainedType)
-                        {
-                            // refactor out probably.
-                            if (!(varV.ParameterTypes.Length >= 1))
-                                throw new InvalidOperationException("Can't chain to function without a parameter");
-
-                            if (chainedOn != null && !varV.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
-                                throw new TypeMismatchException($"Chained type mismatched. Expected {varV.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
-                        }
-
-                        if (parse.Equals(string.Empty))
-                        {
-                            if (chainedType)
-                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, chainedOn, () => varV.Execute());
-                            else
-                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, () => varV.Execute());
-                        }
-                        else if (parse[0].Equals('.')) 
-                        {
-                            parse = parse[1..].TrimStart();
-                            if (chainedType)
-                                return _Evaluate(parse, true,  varV.Execute());
-                            else
-                                return _Evaluate(parse, true, varV.Execute());
-                        }
-                        else
-                            throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
-                    }
-                    else 
-                    {
-#warning
-                        // capture arguments etc
-                        //ARGUMENT_REGEX
-                        // if command try to invoke
-                    }
-                }
-                else if (parse[0].Equals('.'))
-                {
-                    // chain the variable
-                    parse = parse[1..].TrimStart();
-                    return _Evaluate(parse, true, val);
-                }
-                else
-                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
-            }
+                return ReadVariable(input, chainedType, chainedOn);
 
             /*else if (Regex.IsMatch(parse, META_COMMAND_START_REGEX))
                 {
@@ -164,7 +74,7 @@ namespace GSR.CommandRunner
                     string cName = Regex.Match(input, MEMBER_NAME_REGEX).Groups[0].Value;
 
                 }*/
-            return null;
+            throw new NotImplementedException();
         } // end ReadCommand()
 
 
@@ -195,8 +105,8 @@ namespace GSR.CommandRunner
 
             if (value.Equals(float.PositiveInfinity))
                 throw new OverflowException($"\"{rVal}\" is too small or too large.");
-            
-            if (parse.Equals(string.Empty)) 
+
+            if (parse.Equals(string.Empty))
                 return CommandFor(NUMERIC_LITERAL_TYPE, value.GetType(), () => value);
             else if (parse[0].Equals('.'))
             {
@@ -207,7 +117,7 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadNumericLiteral
 
-        private ICommand ReadStringLiteral(string input) 
+        private ICommand ReadStringLiteral(string input)
         {
             string parse = input.Trim();
 
@@ -223,7 +133,7 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException("Invalid string literal, didn't find expectedend quote ");
 
             parse = parse[1..].TrimStart();
-            
+
             if (parse.Equals(string.Empty))
                 return CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
             else if (parse[0].Equals('.'))
@@ -234,6 +144,92 @@ namespace GSR.CommandRunner
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadStringLiteral
+
+        private ICommand ReadVariable(string input, bool chainedType = false, object? chainedOn = null)
+        {
+            string parse = input.Trim();
+            if (!parse[0].Equals('$'))
+                throw new InvalidOperationException($"{nameof(ReadVariable)} should not be called with a value that's not starting with \'$\'");
+
+            parse = parse[1..];
+            string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
+            parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
+
+            if (parse.Length >= 2 && parse[..2].Equals("=>"))
+            {
+                parse = parse[2..].TrimStart();
+                ICommand val = _Evaluate(parse);
+                return CommandFor(FUNCTION_ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val));
+            }
+            else if (parse.Length >= 1 && parse[0].Equals('='))
+            {
+                parse = parse[1..].TrimStart();
+                ICommand val = _Evaluate(parse);
+                return CommandFor(ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val.Execute(Array.Empty<object>())));
+            }
+            else 
+            {
+                object? val = m_sessionContext.GetValue(varName, typeof(object));
+
+                if (parse.Equals(string.Empty))
+                    return CommandFor(VARIABLE_UNWRAP_TYPE, val?.GetType() ?? typeof(object), () => val);
+                else if (parse[0].Equals('.'))
+                {
+                    parse = parse[1..].TrimStart();
+                    return _Evaluate(parse, true, val);
+                }
+                else if (parse[0].Equals('('))
+                {
+                    if (!typeof(ICommand).IsAssignableFrom(val?.GetType()))
+                        throw new InvalidOperationException("Can't invoke non-command varaible.");
+
+                    parse = parse[1..].TrimStart();
+                    ICommand varV = (ICommand)val;
+
+                    if (parse[0].Equals(')'))
+                    {
+                        parse = parse[1..].TrimStart();
+                        if (chainedType)
+                        {
+                            // refactor out probably.
+                            if (!(varV.ParameterTypes.Length >= 1))
+                                throw new InvalidOperationException("Can't chain to function without a parameter");
+
+                            if (chainedOn != null && !varV.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
+                                throw new TypeMismatchException($"Chained type mismatched. Expected {varV.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
+                        }
+
+                        if (parse.Equals(string.Empty))
+                        {
+                            if (chainedType)
+                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, chainedOn, () => varV.Execute());
+                            else
+                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, () => varV.Execute());
+                        }
+                        else if (parse[0].Equals('.'))
+                        {
+                            parse = parse[1..].TrimStart();
+                            if (chainedType)
+                                return _Evaluate(parse, true, varV.Execute());
+                            else
+                                return _Evaluate(parse, true, varV.Execute());
+                        }
+                        else
+                            throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
+                    }
+                    else
+                    {
+#warning
+                        throw new NotImplementedException();
+                        // capture arguments etc
+                        //ARGUMENT_REGEX
+                        // if command try to invoke
+                    }
+                }
+                else
+                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
+            }
+        } // end ReadVariable
 
 
 
