@@ -15,6 +15,7 @@ namespace GSR.CommandRunner
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
+        private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))*";
 
 #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
