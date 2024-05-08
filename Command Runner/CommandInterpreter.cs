@@ -41,15 +41,19 @@ namespace GSR.CommandRunner
 
 
 
-        public ICommand Evaluate(string input) => _Evaluate(input);
-
-
-        private ICommand _Evaluate(string input, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
+        public ICommand Evaluate(string input)
         {
             string parse = input.Trim();
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Command was empty.");
 
+            return _Evaluate(parse);
+        } // end Evaluate()
+
+
+        private ICommand _Evaluate(string input, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
+        {
+            string parse = input;
             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
                 if (chainedType != ChainType.NONE)
@@ -81,11 +85,7 @@ namespace GSR.CommandRunner
 
         private ICommand ReadNumericLiteral(string input)
         {
-            string parse = input.Trim();
-
-            if (!Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
-                throw new InvalidOperationException($"{nameof(ReadStringLiteral)} should not be called with a value that's not starting with \'\"\'");
-
+            string parse = input;
             if (Regex.IsMatch(parse, ILLEGAL_NUMERIC_REGEX))
                 throw new InvalidSyntaxException("Integral numerics may not contain decimal places.");
 
@@ -117,12 +117,8 @@ namespace GSR.CommandRunner
 
         private ICommand ReadStringLiteral(string input)
         {
-            string parse = input.Trim();
-
-            if (!parse[0].Equals('"'))
-                throw new InvalidOperationException($"{nameof(ReadStringLiteral)} should not be called with a value that's not starting with \'\"\'");
-
-            parse = parse[1..];
+            string parse = input[1..];
+            
             string value = Regex.Match(parse, UNTIL_END_QUOTE_REGEX).Value;
             value = ESCAPE_REPLACEMENTS.Aggregate(value, (x, y) => x.Replace(y.Item1, y.Item2));
 
@@ -143,11 +139,7 @@ namespace GSR.CommandRunner
 
         private ICommand ReadVariable(string input, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
         {
-            string parse = input.Trim();
-            if (!parse[0].Equals('$'))
-                throw new InvalidOperationException($"{nameof(ReadVariable)} should not be called with a value that's not starting with \'$\'");
-
-            parse = parse[1..];
+            string parse = input[1..];
             string varName = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
             parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).TrimStart();
 
@@ -187,11 +179,7 @@ namespace GSR.CommandRunner
         public ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null) 
         {
 #warning implement
-            string parse = argsInput.Trim();
-            if (!parse[0].Equals('('))
-                throw new InvalidOperationException($"{nameof(ReadCommand)} should not be called with a value that's not starting with \'(\'");
-
-            parse = parse[1..];
+            string parse = argsInput[1..];
 
             if (parse[0].Equals(')'))
             {
