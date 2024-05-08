@@ -170,10 +170,10 @@ namespace GSR.Tests.CommandRunner
         [DataRow("04i", 4)]
         [DataRow("2147483647i", int.MaxValue)]
         [DataRow("-9223372036854775808l", long.MinValue)]
-        [DataRow("-932l", -932l)]
-        [DataRow("-0l", 0l)]
-        [DataRow("0l", 0l)]
-        [DataRow("1024l", 1024l)]
+        [DataRow("-932l", -932L)]
+        [DataRow("-0l", 0L)]
+        [DataRow("0l", 0L)]
+        [DataRow("1024l", 1024L)]
         [DataRow("9223372036854775807l", long.MaxValue)]
         [DataRow("-9384736478f", -9384736478f)]
         [DataRow("-4239.4f", -4239.4f)]
@@ -394,6 +394,10 @@ namespace GSR.Tests.CommandRunner
         } // end TestVariableReassignmentAssignmentNeedsNoInvoke()
 
         // test regular s null assign
+
+
+
+#warning test function chaining from numerics/float/vars to parameterless throws invalidoperation not invalidsyntax.
 
     } // end class
 } // end namespace

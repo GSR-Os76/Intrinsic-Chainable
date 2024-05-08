@@ -44,7 +44,7 @@ namespace GSR.CommandRunner
         public ICommand Evaluate(string input) => _Evaluate(input);
 
 
-        private ICommand _Evaluate(string input, bool chainedType = false, object? chainedOn = null)
+        private ICommand _Evaluate(string input, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
         {
             string parse = input.Trim();
             if (parse.Length == 0)
@@ -52,14 +52,14 @@ namespace GSR.CommandRunner
 
             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
-                if (chainedType)
+                if (chainedType != ChainType.NONE)
                     throw new InvalidOperationException("Can't chain to numeric literal.");
 
                 return ReadNumericLiteral(input);
             }
             else if (parse[0].Equals('"'))
             {
-                if (chainedType)
+                if (chainedType != ChainType.NONE)
                     throw new InvalidOperationException("Can't chain to string literal.");
 
                 return ReadStringLiteral(input);
@@ -106,13 +106,11 @@ namespace GSR.CommandRunner
             if (value.Equals(float.PositiveInfinity))
                 throw new OverflowException($"\"{rVal}\" is too small or too large.");
 
+            ICommand c = CommandFor(NUMERIC_LITERAL_TYPE, value.GetType(), () => value);
             if (parse.Equals(string.Empty))
-                return CommandFor(NUMERIC_LITERAL_TYPE, value.GetType(), () => value);
-            else if (parse[0].Equals('.'))
-            {
-                parse = parse[1..].TrimStart();
-                return _Evaluate(parse, true, value);
-            }
+                return c;
+            else if (IsChain(parse))
+                return Chain(parse, value, c);
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadNumericLiteral
@@ -134,18 +132,16 @@ namespace GSR.CommandRunner
 
             parse = parse[1..].TrimStart();
 
+            ICommand c = CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
             if (parse.Equals(string.Empty))
-                return CommandFor(STRING_LITERAL_TYPE, typeof(string), () => value);
-            else if (parse[0].Equals('.'))
-            {
-                parse = parse[1..].TrimStart();
-                return _Evaluate(parse, true, value);
-            }
+                return c;
+            else if (IsChain(parse))
+                return Chain(parse, value, c);
             else
                 throw new InvalidSyntaxException($"Couldn't interpret value: \"{input}\"");
         } // end ReadStringLiteral
 
-        private ICommand ReadVariable(string input, bool chainedType = false, object? chainedOn = null)
+        private ICommand ReadVariable(string input, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
         {
             string parse = input.Trim();
             if (!parse[0].Equals('$'))
@@ -167,71 +163,95 @@ namespace GSR.CommandRunner
                 ICommand val = _Evaluate(parse);
                 return CommandFor(ASSIGN_TYPE, () => m_sessionContext.SetValue(varName, val.Execute(Array.Empty<object>())));
             }
-            else 
+            else
             {
-                object? val = m_sessionContext.GetValue(varName, typeof(object));
+                object? value = m_sessionContext.GetValue(varName, typeof(object));
 
+                ICommand c = CommandFor(VARIABLE_UNWRAP_TYPE, value?.GetType() ?? typeof(object), () => value);
                 if (parse.Equals(string.Empty))
-                    return CommandFor(VARIABLE_UNWRAP_TYPE, val?.GetType() ?? typeof(object), () => val);
-                else if (parse[0].Equals('.'))
-                {
-                    parse = parse[1..].TrimStart();
-                    return _Evaluate(parse, true, val);
-                }
+                    return c;
+                else if (IsChain(parse))
+                    return Chain(parse, value, c);
                 else if (parse[0].Equals('('))
                 {
-                    if (!typeof(ICommand).IsAssignableFrom(val?.GetType()))
+                    if (!typeof(ICommand).IsAssignableFrom(value?.GetType()))
                         throw new InvalidOperationException("Can't invoke non-command varaible.");
 
-                    parse = parse[1..].TrimStart();
-                    ICommand varV = (ICommand)val;
-
-                    if (parse[0].Equals(')'))
-                    {
-                        parse = parse[1..].TrimStart();
-                        if (chainedType)
-                        {
-                            // refactor out probably.
-                            if (!(varV.ParameterTypes.Length >= 1))
-                                throw new InvalidOperationException("Can't chain to function without a parameter");
-
-                            if (chainedOn != null && !varV.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
-                                throw new TypeMismatchException($"Chained type mismatched. Expected {varV.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
-                        }
-
-                        if (parse.Equals(string.Empty))
-                        {
-                            if (chainedType)
-                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, chainedOn, () => varV.Execute());
-                            else
-                                return CommandFor(VARIABLE_INVOKE_TYPE, varV.ReturnType, () => varV.Execute());
-                        }
-                        else if (parse[0].Equals('.'))
-                        {
-                            parse = parse[1..].TrimStart();
-                            if (chainedType)
-                                return _Evaluate(parse, true, varV.Execute());
-                            else
-                                return _Evaluate(parse, true, varV.Execute());
-                        }
-                        else
-                            throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"${varName}\"");
-                    }
-                    else
-                    {
-#warning
-                        throw new NotImplementedException();
-                        // capture arguments etc
-                        //ARGUMENT_REGEX
-                        // if command try to invoke
-                    }
+                    return ReadCommand((ICommand)value, parse, chainedType, chainedOn);
                 }
                 else
                     throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable: \"${varName}\"");
             }
-        } // end ReadVariable
+        } // end ReadVariable()
+
+        public ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null) 
+        {
+#warning implement
+            string parse = argsInput.Trim();
+            if (!parse[0].Equals('('))
+                throw new InvalidOperationException($"{nameof(ReadCommand)} should not be called with a value that's not starting with \'(\'");
+
+            parse = parse[1..];
+
+            if (parse[0].Equals(')'))
+            {
+                parse = parse[1..].TrimStart();
+                if (chainedType != ChainType.NONE)
+                {
+                    if (!(c.ParameterTypes.Length >= 1))
+                        throw new InvalidOperationException("Can't chain to function without a parameter");
+
+                    if (chainedOn != null && !c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
+                        throw new TypeMismatchException($"Chained type mismatched. Expected {c.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
+                }
+
+                if (parse.Equals(string.Empty))
+                {
+                    if (chainedType != ChainType.NONE)
+                        return CommandFor(VARIABLE_INVOKE_TYPE, c.ReturnType, chainedOn, () => c.Execute());
+                    else
+                        return CommandFor(VARIABLE_INVOKE_TYPE, c.ReturnType, () => c.Execute());
+                }
+                else if (parse[0].Equals('.'))
+                {
+                    parse = parse[1..].TrimStart();
+                    if (chainedType != ChainType.NONE)
+                        return _Evaluate(parse, ChainType.CHAIN, c.Execute());
+                    else
+                        return _Evaluate(parse, ChainType.CHAIN, c.Execute());
+                }
+                else
+                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"{c}\"");
+            }
+            else
+            {
+                throw new NotImplementedException();
+                // capture arguments etc
+                //ARGUMENT_REGEX
+                // if command try to invoke
+            }
+        } // end ReadCommand()
 
 
+
+        public bool IsChain(string input) => Regex.IsMatch(input, @"^\.>?");
+
+        public ICommand Chain(string input, object? ifChain, ICommand ifFunctionChain) 
+        {
+            string parse = input;
+            if (parse.Length >= 2 && parse[..2].Equals(".>"))
+            {
+                parse = parse[2..].TrimStart();
+                return _Evaluate(parse, ChainType.FUNCTION_CHAIN, ifFunctionChain);
+            }
+            else if (parse[0].Equals('.'))
+            {
+                parse = parse[1..].TrimStart();
+                return _Evaluate(parse, ChainType.CHAIN, ifChain);
+            }
+            else
+                throw new InvalidSyntaxException($"Expected chain operator, but got {input}");
+        } // end Chain()
 
 #warning .> vs . for chaining. first passes function, parameterize or not; second pass value of function, or if has ? parameters creates a command that will execute when given args to match them
 #warning > before argument as well.
