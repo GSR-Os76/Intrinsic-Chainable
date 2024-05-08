@@ -399,5 +399,15 @@ namespace GSR.Tests.CommandRunner
 
 #warning test function chaining from numerics/float/vars to parameterless throws invalidoperation not invalidsyntax.
 
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("^")]
+        [DataRow("^")]
+        [DataRow("%")]
+        [DataRow("&")]
+        [DataRow("@#s")]
+        [DataRow("+90")]
+        public void TestInvalidSyntaxFromBeginning(string command) => Interpreter().Evaluate(command);
+
     } // end class
 } // end namespace

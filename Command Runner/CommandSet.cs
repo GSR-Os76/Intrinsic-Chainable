@@ -27,5 +27,6 @@ namespace GSR.CommandRunner
                 throw new ArgumentException($"Encountered command collisions: {collisions.Aggregate("", (x, y) => x + $"\n\r\tCollision for signature: {y}")}");
         } // end constructors
 
+        public ICommand GetCommand(string name, int paramCount) => Commands.First((x) => name.Equals(x.Name) && paramCount == x.ParameterTypes.Length);
     } // end class
 } // end namespace

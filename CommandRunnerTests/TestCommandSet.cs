@@ -25,5 +25,15 @@ namespace GSR.Tests.CommandRunner
             ICommandSet cs = new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) });
             Assert.AreEqual(cs.Commands.Count, 6);
         } // end TestCollisionDetection()
+
+        [TestMethod]
+        public void TestGetCommand() 
+        {
+            ICommandSet cs = new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) });
+            Assert.AreNotEqual(cs.GetCommand("AB", 0), cs.GetCommand("AB", 1));
+            Assert.AreSame(cs.GetCommand("AB", 0), cs.GetCommand("AB", 0));
+            Assert.AreSame(cs.GetCommand("AB", 1), cs.GetCommand("AB", 1));
+        } // end TestGetCommand()
+
     } // end class
 } // end namespace

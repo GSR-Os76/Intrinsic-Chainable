@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace GSR.CommandRunner
 {
@@ -11,7 +12,6 @@ namespace GSR.CommandRunner
         private const string VARIABLE_UNWRAP_TYPE = "vu";
         private const string VARIABLE_INVOKE_TYPE = "ve";
 
-        private const string META_COMMAND_START_REGEX = @"^~\s*\.\s*";
         private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
@@ -70,15 +70,24 @@ namespace GSR.CommandRunner
             }
             else if (parse[0].Equals('$'))
                 return ReadVariable(input, chainedType, chainedOn);
-
-            /*else if (Regex.IsMatch(parse, META_COMMAND_START_REGEX))
+            else if (parse[0].Equals('~') || Regex.IsMatch(parse[..1], MEMBER_NAME_REGEX))
+            {
+                bool isMeta = false;
+                if (parse[0].Equals('~')) 
                 {
-                    parse = Regex.Replace(input, META_COMMAND_START_REGEX, "");
-                    return ReadMetaCommand(parse);
-                    string cName = Regex.Match(input, MEMBER_NAME_REGEX).Groups[0].Value;
+                    parse = parse[1..];
+                    isMeta = true;
+                }
 
-                }*/
-            throw new NotImplementedException();
+                string name = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
+                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty);
+
+                int paramCount = GetArgumentCount(parse) + chainedType != ChainType.NONE ? 1 : 0;
+                ICommand c = (isMeta ? s_metaCommands : m_commands).GetCommand(name, paramCount);
+                return ReadCommand(c, parse, chainedType, chainedOn);
+            }
+            else
+                throw new InvalidSyntaxException($"Couldn't read command: {input}");
         } // end ReadCommand()
 
 
@@ -240,6 +249,12 @@ namespace GSR.CommandRunner
             else
                 throw new InvalidSyntaxException($"Expected chain operator, but got {input}");
         } // end Chain()
+
+        public int GetArgumentCount(string input) 
+        {
+#warning implement
+            throw new NotImplementedException();
+        } // end GetArgumentCount()
 
 #warning .> vs . for chaining. first passes function, parameterize or not; second pass value of function, or if has ? parameters creates a command that will execute when given args to match them
 #warning > before argument as well.
