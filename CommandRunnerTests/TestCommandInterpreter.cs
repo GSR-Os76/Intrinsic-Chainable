@@ -1,4 +1,5 @@
 ﻿using GSR.CommandRunner;
+using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
 namespace GSR.Tests.CommandRunner
 {
@@ -417,6 +418,32 @@ namespace GSR.Tests.CommandRunner
         [DataRow("~A(,,)")]
         [DataRow("~A(,)")]
         public void TestUnreadableArgList(string command) => Interpreter().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("\"\".~Variables()")]
+        [DataRow("0f.~Variables()")]
+        [DataRow("\"Some Test In a String\".~notRealCommand()")]
+        [DataRow("\"\".~notRealCommand()")]
+        public void TestChainToMetaCommand(string command) => Interpreter().Evaluate(command);
+
+        [TestMethod]
+        [DataRow("~Variables()", 2)]
+        [DataRow("~Variables()", 4, "$A=0i", "$B=\"l\"")]
+        [DataRow("~Variables()", 3, "$HowAreYou=\"Fine\"", "$HowAreYou=\"Bad\"")]
+        [DataRow("~Variables()", 4, "$Var1 = $Var2 = 0s")]
+        [DataRow("~Variables()", 3, "$Var1 =>$Var2= 0s")]
+        public void TestMetaCommandVariables(string command, int newlinesExpected, params string[] var) 
+        {
+            ICommandInterpreter ci = Interpreter();
+            var.ToList().ForEach((x) => ci.Evaluate(x).Execute());
+
+            object? rawValue = ci.Evaluate(command).Execute();
+            Assert.IsNotNull(rawValue);
+            string value = (string)rawValue;
+            Logger.LogMessage(value); // intentionally left for the time
+            Assert.AreEqual(newlinesExpected, value.Count((x) => x == '\n'));
+        } // end TestMetaCommandVariables
 
     } // end class
 } // end namespace

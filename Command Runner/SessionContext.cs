@@ -1,8 +1,11 @@
-﻿namespace GSR.CommandRunner
+﻿using System.Collections.Immutable;
+
+namespace GSR.CommandRunner
 {
     public class SessionContext : ISessionContext
     {
-        private IList<Variable> m_variables = new List<Variable>();
+        public IList<Variable> Variables => m_variables.ToImmutableList();
+        private readonly IList<Variable> m_variables = new List<Variable>();
 
 
 
@@ -10,7 +13,7 @@
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (!q.Any())
-                throw new UndefinedMemberException($"No varible found: {name}");
+                throw new UndefinedMemberException($"No variable found: {name}");
 
             Variable v = q.First();
             if (v.Type != null && !targetType.IsAssignableFrom(v.Type))

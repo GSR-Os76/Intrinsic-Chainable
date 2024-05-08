@@ -2,6 +2,7 @@
 {
     public interface ISessionContext
     {
+        public IList<Variable> Variables { get; }
 
         public object? GetValue(string name, Type type);
 

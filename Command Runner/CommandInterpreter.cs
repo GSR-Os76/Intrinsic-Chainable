@@ -1,5 +1,5 @@
-﻿using System.Text.RegularExpressions;
-using System.Threading.Channels;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 
 namespace GSR.CommandRunner
 {
@@ -10,7 +10,7 @@ namespace GSR.CommandRunner
         private const string STRING_LITERAL_TYPE = "sl";
         private const string NUMERIC_LITERAL_TYPE = "nl";
         private const string VARIABLE_UNWRAP_TYPE = "vu";
-        private const string VARIABLE_INVOKE_TYPE = "ve";
+        private const string COMMAND_INVOKE_TYPE = "ci";
 
         private const string MEMBER_NAME_REGEX = @"^[_a-zA-Z][_0-9a-zA-Z]*";
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
@@ -24,7 +24,7 @@ namespace GSR.CommandRunner
 
         private static readonly string UNTIL_END_QUOTE_REGEX = @"^([^\\""]" + ESCAPE_REPLACEMENTS_R.Select((x) => x.Item1).Aggregate("|", (x, y) => $"{x}({y})|")[..^1] + @")*";
 
-        private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(CommandInterpreter));
+        private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(MetaCommands));
         private readonly ICommandSet m_commands;
         private readonly ISessionContext m_sessionContext;
         private int m_uniqueNumber = 0;
@@ -73,8 +73,14 @@ namespace GSR.CommandRunner
             else if (parse[0].Equals('~') || Regex.IsMatch(parse[..1], MEMBER_NAME_REGEX))
             {
                 bool isMeta = false;
-                if (parse[0].Equals('~')) 
+                if (parse[0].Equals('~'))
                 {
+                    if (chainedType != ChainType.NONE)
+                        throw new InvalidOperationException("Meta commands are not able to be chained into");
+
+                    chainedType = ChainType.CHAIN;
+                    chainedOn = this;
+
                     parse = parse[1..];
                     isMeta = true;
                 }
@@ -127,7 +133,7 @@ namespace GSR.CommandRunner
         private ICommand ReadStringLiteral(string input)
         {
             string parse = input[1..];
-            
+
             string value = Regex.Match(parse, UNTIL_END_QUOTE_REGEX).Value;
             value = ESCAPE_REPLACEMENTS.Aggregate(value, (x, y) => x.Replace(y.Item1, y.Item2));
 
@@ -185,7 +191,7 @@ namespace GSR.CommandRunner
             }
         } // end ReadVariable()
 
-        private ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null) 
+        private ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
         {
 #warning implement
             string parse = argsInput[1..];
@@ -205,12 +211,13 @@ namespace GSR.CommandRunner
                 if (parse.Equals(string.Empty))
                 {
                     if (chainedType != ChainType.NONE)
-                        return CommandFor(VARIABLE_INVOKE_TYPE, c.ReturnType, chainedOn, () => c.Execute());
+                        return CommandInvokationFor(COMMAND_INVOKE_TYPE, c, chainedType, chainedOn);
                     else
-                        return CommandFor(VARIABLE_INVOKE_TYPE, c.ReturnType, () => c.Execute());
+                        return CommandFor(COMMAND_INVOKE_TYPE, c.ReturnType, () => c.Execute());
                 }
                 else if (parse[0].Equals('.'))
                 {
+                    throw new NotImplementedException();
                     parse = parse[1..].TrimStart();
                     if (chainedType != ChainType.NONE)
                         return _Evaluate(parse, ChainType.CHAIN, c.Execute());
@@ -233,7 +240,7 @@ namespace GSR.CommandRunner
 
         private bool IsChain(string input) => Regex.IsMatch(input, @"^\.>?");
 
-        private ICommand Chain(string input, object? ifChain, ICommand ifFunctionChain) 
+        private ICommand Chain(string input, object? ifChain, ICommand ifFunctionChain)
         {
             string parse = input;
             if (parse.Length >= 2 && parse[..2].Equals(".>"))
@@ -252,7 +259,7 @@ namespace GSR.CommandRunner
 
         public static int GetArgumentCount(string input)
         {
-            string parse = input[1..]; // remove espected parenthesis
+            string parse = input[1..]; // remove expected parenthesis
             int count = 0;
             while (Regex.IsMatch(parse, ARGUMENT_REGEX))
             {
@@ -281,6 +288,19 @@ namespace GSR.CommandRunner
 
         private ICommand CommandFor(string type, Type returnType, Func<object?> value) => new Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
 
+        private ICommand CommandInvokationFor(string type, ICommand c, ChainType chainType, object? chainedOn) 
+        {
+            if (chainType == ChainType.CHAIN) 
+            {
+                bool hasParams = false;
+                if (hasParams)
+                    throw new NotImplementedException();
+
+                return CommandFor(type, c.ReturnType, () => c.Execute(new object?[] { chainedOn }));
+            }
+            throw new NotImplementedException();
+        } // end CommandInvokationFor()
+
         private ICommand CommandFor(string type, Type returnType, object? chainedOn, Func<object?> value)
         {
             throw new NotImplementedException();
@@ -290,5 +310,56 @@ namespace GSR.CommandRunner
 
         private ICommand CommandForFunctionChained(string type, Type returnType, object? chainedOn, object?[] args, Func<object?> value) => throw new NotImplementedException();
 
-    } // end class
+
+
+        public static class MetaCommands
+        {
+            [Command]
+            public static string Variables(CommandInterpreter self) 
+            {
+                IEnumerable<Tuple<string, string?, string?>> rows = self.m_sessionContext.Variables.Select((x) => Tuple.Create(
+                    x.Name, 
+                    x.Value?.GetType()?.ToString(), 
+                    x.Value?.ToString()));
+
+                Tuple<int, int, int> maxLengths = rows.Count() >= 1 
+                    ? Tuple.Create(
+                    rows.Select((x) => x.Item1.Length).Max() + 1,
+                    rows.Select((x) => x.Item2?.Length ?? 4).Max(),
+                    rows.Select((x) => x.Item3?.Length ?? 4).Max()
+                    )
+                    : Tuple.Create(0, 0, 0);
+
+                string nameColumnName = "Name";
+                string TypeColumnName = "Type";
+                string ValueColumnName = "Value";
+
+                maxLengths = Tuple.Create(
+                    Math.Max(maxLengths.Item1, nameColumnName.Length),
+                    Math.Max(maxLengths.Item2, TypeColumnName.Length),
+                    Math.Max(maxLengths.Item3, ValueColumnName.Length)
+                    );
+
+                string formatter = $" {{0, -{maxLengths.Item1}}} | {{1, -{maxLengths.Item2}}} | {{2, -{maxLengths.Item3}}} ";
+                string columnHeader = string.Format(formatter,
+                    nameColumnName,
+                    TypeColumnName,
+                    ValueColumnName);
+
+                StringBuilder sb = new();
+                sb.AppendLine(columnHeader);
+                sb.AppendLine(new string('-', columnHeader.Length));
+
+                foreach(Tuple<string, string?, string?> row in rows)
+                    sb.AppendLine(string.Format(formatter, 
+                        $"${row.Item1}", 
+                        row.Item2 ?? "null", 
+                        row.Item3 ?? "null"));
+
+                return sb.ToString();
+            } // end Variables()
+
+
+        } // end innerclass
+    } // end outer class
 } // end namespace
