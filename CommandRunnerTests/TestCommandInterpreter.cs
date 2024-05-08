@@ -409,5 +409,14 @@ namespace GSR.Tests.CommandRunner
         [DataRow("+90")]
         public void TestInvalidSyntaxFromBeginning(string command) => Interpreter().Evaluate(command);
 
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("~A(%")]
+        [DataRow("~A(,,)")]
+        [DataRow("~A(,)")]
+        public void TestUnreadableArgList(string command) => Interpreter().Evaluate(command);
+
     } // end class
 } // end namespace

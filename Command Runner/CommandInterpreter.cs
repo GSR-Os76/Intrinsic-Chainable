@@ -16,7 +16,7 @@ namespace GSR.CommandRunner
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
-        private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))*";
+        private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
 
 #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
@@ -185,7 +185,7 @@ namespace GSR.CommandRunner
             }
         } // end ReadVariable()
 
-        public ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null) 
+        private ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null) 
         {
 #warning implement
             string parse = argsInput[1..];
@@ -231,9 +231,9 @@ namespace GSR.CommandRunner
 
 
 
-        public bool IsChain(string input) => Regex.IsMatch(input, @"^\.>?");
+        private bool IsChain(string input) => Regex.IsMatch(input, @"^\.>?");
 
-        public ICommand Chain(string input, object? ifChain, ICommand ifFunctionChain) 
+        private ICommand Chain(string input, object? ifChain, ICommand ifFunctionChain) 
         {
             string parse = input;
             if (parse.Length >= 2 && parse[..2].Equals(".>"))
@@ -250,13 +250,29 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Expected chain operator, but got {input}");
         } // end Chain()
 
-        public int GetArgumentCount(string input) 
+        public static int GetArgumentCount(string input)
         {
-#warning implement
-            throw new NotImplementedException();
+            string parse = input[1..]; // remove espected parenthesis
+            int count = 0;
+            while (Regex.IsMatch(parse, ARGUMENT_REGEX))
+            {
+                parse = Regex.Replace(parse, ARGUMENT_REGEX, string.Empty);
+                ++count;
+                if (parse.Length == 0)
+                    throw new InvalidSyntaxException("Command not ended");
+                else if (parse[0].Equals(','))
+                    parse = parse[1..].TrimStart();
+                else if (parse[0].Equals(')'))
+                    return count;
+                else
+                    throw new InvalidSyntaxException($"Unexpected character after command argument: \"{parse[0]}\""); // theoretically unreachable route
+            }
+            if (parse[0].Equals(')'))
+                return count;
+            else
+                throw new InvalidSyntaxException($"Unexpected character while reading arguments: \"{parse[0]}\"");
         } // end GetArgumentCount()
 
-#warning .> vs . for chaining. first passes function, parameterize or not; second pass value of function, or if has ? parameters creates a command that will execute when given args to match them
 #warning > before argument as well.
 
 
