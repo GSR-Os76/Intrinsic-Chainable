@@ -10,6 +10,8 @@ namespace GSR.Tests.CommandRunner
 
         public CommandInterpreter Interpreter() => new CommandInterpreter(new CommandSet());
 
+        public ICommandInterpreter Interpreter2() => new CommandInterpreter(new CommandSet(typeof(CommandSetThree)));
+
 
 
         [TestMethod]
@@ -323,9 +325,6 @@ namespace GSR.Tests.CommandRunner
         } // end TestVariableInoke()
 
 
-#warning test for chained variable invoke;
-
-
 
         [TestMethod]
         [ExpectedException(typeof(UndefinedMemberException))]
@@ -400,7 +399,6 @@ namespace GSR.Tests.CommandRunner
 
 
 
-#warning test function chaining from numerics/float/vars to parameterless throws invalidoperation not invalidsyntax.
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSyntaxException))]
@@ -481,5 +479,117 @@ namespace GSR.Tests.CommandRunner
             string value = (string)rawValue;
             Logger.LogMessage(value); // intentionally left for the times
         } // end TestMetaCommandHelp()
+
+
+
+        [TestMethod]
+        [DataRow("~Help().ToLower()")]
+        public void TestMetaCommandChainToSingleParamCommand(string command) 
+        {
+            object? v = Interpreter2().Evaluate(command).Execute();
+            Assert.IsNotNull(v);
+            Assert.IsTrue(((string)v).All((x) => !char.IsLetter(x) ^ char.IsLower(x)));
+        } // end TestMetaCommandChainToSingleParamCommand()
+
+        [TestMethod]
+        [DataRow("90i.Add(1i)", 91)]
+        public void TestChainWithAnotherParam(string command, object expectation) 
+        {
+            object? v = Interpreter2().Evaluate(command).Execute();
+            Assert.AreEqual(v, expectation);
+        } // end TestChainWithAnotherParam()
+
+        [TestMethod]
+        [DataRow("ToLower(?).Range(0, ? ) ", typeof(string), typeof(string), typeof(int))]
+        [DataRow("ToUpper(?).Count()", typeof(int), typeof(string))]
+        public void TestParameterization(string command, Type expectedReturnType, Type[] expectedParamTypes) 
+        {
+            ICommand c = Interpreter2().Evaluate(command);
+            Assert.AreEqual(expectedReturnType, c.ReturnType);
+            Assert.AreEqual(expectedParamTypes.Length, c.ParameterTypes.Length);
+            for(int i = 0; i < expectedParamTypes.Length; i++)
+                Assert.AreEqual(expectedParamTypes[i], c.ParameterTypes[i]);
+        } // end TestParameterization
+
+        [TestMethod]
+        [DataRow("$L => ToLower(?)", "\"AND sO We sEe\".$L()", "and so we see")]
+        public void TestChainToVariableHoldingParameterized(string assign, string command, object expectation) 
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ci.Evaluate(assign).Execute();
+            object? v = ci.Evaluate(command).Execute();
+            Assert.AreEqual(expectation, v);
+        } // end TestChainToVariableHoldingParameterized()
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("~Commands((")]
+        [DataRow("Range(\"Y\", 0, -1(")]
+        public void TestOpenParenthesisInsteadOfCloseInInvocation(string command) => Interpreter2().Evaluate(command);
+
+        [TestMethod]
+        [DataRow("\"\".>IsCommand()", true)]
+        [DataRow("~Varaibles().>IsCommand()", true)]
+        [DataRow("10.10f.>IsCommand()", true)]
+        [DataRow("\"\".IsCommand()", false)]
+        [DataRow("~Varaibles().IsCommand()", false)]
+        [DataRow("10.10f.IsCommand()", false)]
+        public void TestFunctionChaining(string command, object? expectation) => Assert.AreEqual(Interpreter2().Evaluate(command).Execute(), expectation);
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("ToLower()")]
+        [DataRow("\"fyujng34|\".Range(0)")]
+        public void TestWrongArgumentCount(string command) => Interpreter2().Evaluate(command);
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("7l.Parameterless()")]
+        [DataRow("\"\".Parameterless()")]
+        // variable?
+        public void TestChainToParameterless(string command) => Interpreter2().Evaluate(command);
+
+        [TestMethod]
+        [DataRow("IsCommand(>\"\")", true)]
+        [DataRow("IsCommand(>~Varaibles())", true)]
+        [DataRow("IsCommand(>10.10f)", true)]
+        [DataRow("IsCommand(\"\")", false)]
+        [DataRow("IsCommand(~Varaibles())", false)]
+        [DataRow("IsCommand(10.10f)", false)]
+        public void TestFunctionArg(string command, object? expectation) => Assert.AreEqual(Interpreter2().Evaluate(command).Execute(), expectation);
+
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("A()")]
+        [DataRow("Variables()")]
+        [DataRow("A324od_3kd()")]
+        public void TestUndefinedCommand(string command) => Interpreter().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("ToLower(>?)")]
+        [DataRow("Range(>, 0, >?)")]
+        [DataRow("~Commands(>?)")]
+        public void TestFunctionParameterization(string command) => Interpreter2().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidOperationException))]
+        [DataRow("$_4 =>ToUpper(?)", "$_4(>?)")]
+        public void TestFunctionParameterizationOfVariable(string assign, string command)
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command); 
+        } // end TestFunctionParameterizationOfVariable()
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidSyntaxException))]
+        [DataRow("$Arv = > \"\"")]
+        public void TestInvalidFunctionAssign(string command) => Interpreter().Evaluate(command);
+        // test that = > if invalid
+
+
     } // end class
 } // end namespace

@@ -35,5 +35,16 @@ namespace GSR.Tests.CommandRunner
             Assert.AreSame(cs.GetCommand("AB", 1), cs.GetCommand("AB", 1));
         } // end TestGetCommand()
 
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("", 0)]
+        [DataRow("_Ps", 0)]
+        [DataRow("AB", 3)]
+        public void TestGetUnknownCommand(string name, int paramCount) 
+        {
+            ICommandSet cs = new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) });
+            cs.GetCommand(name, paramCount);
+        } // end TestGetUnknownCommand()
+
     } // end class
 } // end namespace

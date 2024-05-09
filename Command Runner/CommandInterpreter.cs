@@ -373,7 +373,6 @@ namespace GSR.CommandRunner
                     $"General: \r\n" +
                     $"Literally everything is a command: literals, assignments, variable unwraps/invocations, invocations in general. \r\n" +
                     $"The function character \">\" means the command is passed as itself, otherwise it'll be immediately executed, or inlined if it's parameterized. \r\n";
-#warning finish
             } // end Help()
 
             [Command]
@@ -490,6 +489,6 @@ namespace GSR.CommandRunner
                 return sb.ToString();
             } // end Commands()
 
-        } // end innerclass
+        } // end inner class
     } // end outer class
 } // end namespace
