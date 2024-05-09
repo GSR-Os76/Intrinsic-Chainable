@@ -352,6 +352,7 @@ namespace GSR.CommandRunner
                     $"Command Invocation: \r\n" +
                     $"A command including one in a variable may be invoked by following it with a matched pair of parenthesis. \r\n" +
                     $"Any number of arguments may be included within the matched parenthesis, separated by commas. \r\n" +
+                    $"An argument proceeded by \">\" will be passed as a command, otherwise it'll be immediately executed eithout arguments, or if it's parameterized it'll be inlined. \r\n" +
                     $"If the considered command is chained into, the value chained into it is the first argument, and arguments with the matched parenthesis must start with the second. \r\n" +
                     $"Multiple command may exist with the same name so long as they all have distinct parameter counts. \r\n" +
                     $"An incorrect number of arguments will result in throwing an exception. \r\n" +
