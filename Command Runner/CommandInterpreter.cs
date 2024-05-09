@@ -320,8 +320,8 @@ namespace GSR.CommandRunner
             {
                 return
                     $"Run ~{nameof(Help)}() to get an overview of general syntax, and helper commands. \r\n" +
-                    $"Run ~{nameof(Variables)}() to view all current variables, thier names/identifiers, their current types, and their values. \r\n" +
-                    $"Run ~{nameof(Commands)}() to view all current commands, thier names/identifiers, their return types, and their parameter types if that applies. \r\n" +
+                    $"Run ~{nameof(Variables)}() to view all current variables, their names/identifiers, their current types, and their values. \r\n" +
+                    $"Run ~{nameof(Commands)}() to view all current commands, their names/identifiers, their return types, and their parameter types if such's applicable. \r\n" +
                     $"\r\n" +
                     $"Numeric Literals: \r\n" +
                     $"Six types of numeric literals are provided. \r\n" +
@@ -329,19 +329,49 @@ namespace GSR.CommandRunner
                     $"Three floating type: f(32bit), d(64bit), m(128bit) \r\n" +
                     $"All numerics must be followed by the symbol for their type. \r\n" +
                     $"Including a decimal point in an integral will cause an expection, even if it's just \".0\". \r\n" +
-                    $"Numeric must always start with a digit. \r\n" +
-                    $"Any value exceeding the maximum or minimum value for it's type will triger an exception. \r\n" +
+                    $"Numerics must always start with a digit. \r\n" +
+                    $"Any value exceeding the maximum or minimum value for it's type will trigger an exception. \r\n" +
                     $"\r\n" +
                     $"String Literals: \r\n" +
-                    $"String literals are started an ended by a double quotation mark. \r\n" +
+                    $"String literals are started and ended by a double quotation mark. \r\n" +
                     $"A double quotation mark can be escaped when proceeded by a single backslash. \r\n" +
                     $"A backslash can be escaped when proceeded by a single backslash. \r\n" +
                     $"\r\n" +
                     $"Variables: \r\n" +
+                    $"All variables must start with a \"$\". Then an underscore or letter, then any number of underscores and letters and numbers are allowed. \r\n" +
+                    $"Running the name of a variable returns it's stored value, \"unwrapping\" the variable, or if it doesn't exist, throws an exception. \r\n" +
+                    $"Running the name of a variable that's holding an ICommand, followed by parentheses invokes the stored command. \r\n" +
+                    $"A variable name followed by an \"=\" or \"=>\" are used to assign or reassign a variable. \r\n" +
+                    $"\"=\" assignment evaluates the right side as a command, and then immediately invokes it without arguments. \r\n" +
+                    $"\"=>\" assignment evaluates the right side as a command, and then stores it in the varible. \r\n" +
                     $"\r\n" +
-                    $"Command Invokation: \r\n" +
+                    $"Commands: \r\n" +
+                    $"A default set of commands may be provided to the interpreter. \r\n" +
+                    $"All comand must start with an underscore or letter, then any number of underscores and letters and numbers are allowed. \r\n" +
                     $"\r\n" +
-                    $"Chaining: \r\n";
+                    $"Command Invocation: \r\n" +
+                    $"A command including one in a variable may be invoked by following it with a matched pair of parenthesis. \r\n" +
+                    $"Any number of arguments may be included within the matched parenthesis, separated by commas. \r\n" +
+                    $"If the considered command is chained into, the value chained into it is the first argument, and arguments with the matched parenthesis must start with the second. \r\n" +
+                    $"Multiple command may exist with the same name so long as they all have distinct parameter counts. \r\n" +
+                    $"An incorrect number of arguments will result in throwing an exception. \r\n" +
+                    $"\r\n" +
+                    $"Chaining: \r\n" +
+                    $"Any command may be chained into another, if the command chained into doesn't accept an argument, or the type doesn't match, an exception's thrown. \r\n" +
+                    $"Chaining using the operator \".\" immediately executes the command with arguments, or if parameterized inlines it. \r\n" +
+                    $"Chain using the operator \".>\" passes the command as itself \r\n" +
+                    $"\r\n" +
+                    $"Paramerization: \r\n" +
+                    $"A command invocation can be parameterized be replacing an argument with a \"?\". \r\n" +
+                    $"The resulting command will require an argument to be provided which will be substitute in it's place. \r\n" +
+                    $"As many parameterization are allowed as arguments are required. \r\n" +
+                    $"Chaining from a parameterized invocation does not immediately execute the invocation, but rather the resulting command takes arguments as are needed. \r\n" +
+                    $"The same goes for an parameterized invocation used as an argument within the invocation parenthesis. \r\n" +
+                    $"Arguments are substited in the order left to right that the parameterizations occur. \r\n" +
+                    $"\r\n" +
+                    $"General: \r\n" +
+                    $"Literally everything is a command: literals, assignments, variable unwraps/invocations, invocations in general. \r\n" +
+                    $"The function character \">\" means the command is passed as itself, otherwise it'll be immediately executed, or inlined if it's parameterized. \r\n";
 #warning finish
             } // end Help()
 
@@ -458,7 +488,6 @@ namespace GSR.CommandRunner
 
                 return sb.ToString();
             } // end Commands()
-
 
         } // end innerclass
     } // end outer class

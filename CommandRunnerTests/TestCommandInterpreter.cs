@@ -424,9 +424,11 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         [ExpectedException(typeof(InvalidOperationException))]
         [DataRow("\"\".~Variables()")]
-        [DataRow("0f.~Variables()")]
+        [DataRow("0f.~Commands()")]
         [DataRow("\"Some Test In a String\".~notRealCommand()")]
         [DataRow("\"\".~notRealCommand()")]
+        [DataRow("324893i.>~Help()")]
+        [DataRow("9d.>  ~Commands()")]
         public void TestChainToMetaCommand(string command) => Interpreter().Evaluate(command);
 
         [TestMethod]
