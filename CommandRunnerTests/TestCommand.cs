@@ -39,10 +39,10 @@ namespace GSR.Tests.CommandRunner
         } // end TestSubtypeArg()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow(0)]
         [DataRow()]
-        [DataRow(0, "", 909f)]
+        [DataRow(0, "")]
         [DataRow(0, 0, 0, 0)]
         public void TestExecuteWrongParameterCount(params object[] parameters)
         {
@@ -50,7 +50,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestExecuteWrongParameterCount()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(TypeMismatchException))]
         [DataRow(56.3f, 90, 23)]
         [DataRow(12f, .93d, 2)]
         [DataRow("", 093, "arg")]
@@ -62,7 +62,7 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(TypeMismatchException))]
         public void TestExecuteInvalidFunctionReturn()
         {
             Inv().Execute(Array.Empty<object>());

@@ -30,13 +30,13 @@ namespace GSR.CommandRunner
         public ICommand GetCommand(string name, int paramCount)
         {
             IEnumerable<ICommand> matches = Commands.Where((x) => name.Equals(x.Name) && paramCount == x.ParameterTypes.Length);
-            if (matches.Count() < 1)
+            if (!matches.Any())
                 throw new UndefinedMemberException($"No such command \"{name}\" with \"{paramCount}\" parameters was found.");
             else if (matches.Count() > 1)
                 throw new InvalidStateException($"multiple such command \"{name}\" with \"{paramCount}\" parameters was found, this shouldn't happen.");
             else
                 return matches.First();
+        } // end GetCommand()
 
-        } // end GetCommand
     } // end class
 } // end namespace

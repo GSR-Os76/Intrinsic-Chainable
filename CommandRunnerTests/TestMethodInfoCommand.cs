@@ -91,7 +91,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestSubtypeArg()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow(0)]
         [DataRow()]
         [DataRow(0, "", 909f)]
@@ -103,7 +103,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestExecuteWrongParameterCount()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(TypeMismatchException))]
         [DataRow(56.3f, "drftgyh uju66y_")]
         [DataRow(12f, .93d)]
         [DataRow("", 093)]

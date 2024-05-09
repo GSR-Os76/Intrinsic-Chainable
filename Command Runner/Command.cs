@@ -27,15 +27,15 @@
         public object? Execute(object?[] parameters)
         {
             if (ParameterTypes.Length != parameters.Length)
-                throw new InvalidOperationException($"Expected {ParameterTypes.Length} arguements, was given {parameters.Length}");
+                throw new InvalidCommandOperationException($"Expected {ParameterTypes.Length} arguements, was given {parameters.Length}");
 
             for (int i = 0; i < ParameterTypes.Length; i++)
                 if (!ParameterTypes[i].IsAssignableFrom(parameters[i]?.GetType()))
-                    throw new InvalidOperationException($"Type error at argument {i + 1}:\n\r\t Expected {ParameterTypes[i]} or subtype, got {parameters[i]?.GetType()}");
+                    throw new TypeMismatchException($"Type error at argument {i + 1}:\n\r\t Expected {ParameterTypes[i]} or subtype, got {parameters[i]?.GetType()}");
 
             object? result = m_function.Invoke(parameters);
             if (result != null && !ReturnType.IsAssignableFrom(result?.GetType()))
-                throw new InvalidOperationException($"Invalid command function return type. Expected {ReturnType} or subtype,  got {result?.GetType()}");
+                throw new TypeMismatchException($"Invalid command function return type. Expected {ReturnType} or subtype,  got {result?.GetType()}");
 
             return result;
         } // end Execute()

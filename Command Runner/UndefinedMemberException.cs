@@ -1,8 +1,8 @@
 ﻿namespace GSR.CommandRunner
 {
 	[Serializable]
-	public class UndefinedMemberException : Exception
-	{
+	public class UndefinedMemberException : InterpreterException
+    {
 		public UndefinedMemberException() { }
 		public UndefinedMemberException(string message) : base(message) { }
 		public UndefinedMemberException(string message, Exception inner) : base(message, inner) { }

@@ -58,14 +58,14 @@ namespace GSR.CommandRunner
             if (Regex.IsMatch(parse[..1], NUMERIC_START_CHAR_REGEX))
             {
                 if (chainedType != ChainType.NONE)
-                    throw new InvalidOperationException("Can't chain to numeric literal.");
+                    throw new InvalidCommandOperationException("Can't chain to numeric literal.");
 
                 return ReadNumericLiteral(input);
             }
             else if (parse[0].Equals('"'))
             {
                 if (chainedType != ChainType.NONE)
-                    throw new InvalidOperationException("Can't chain to string literal.");
+                    throw new InvalidCommandOperationException("Can't chain to string literal.");
 
                 return ReadStringLiteral(input);
             }
@@ -77,7 +77,7 @@ namespace GSR.CommandRunner
                 if (parse[0].Equals('~'))
                 {
                     if (chainedType != ChainType.NONE)
-                        throw new InvalidOperationException("Meta commands are not able to be chained into");
+                        throw new InvalidCommandOperationException("Meta commands are not able to be chained into");
 
                     chainedType = ChainType.CHAIN;
                     chainedOn = this;
@@ -108,19 +108,28 @@ namespace GSR.CommandRunner
             string rVal = Regex.Match(parse, NUMERIC_REGEX).Value;
             parse = Regex.Replace(parse, NUMERIC_REGEX, string.Empty);
 
-            object value = rVal[^1] switch
+            object value;
+            try
             {
-                's' => short.Parse(rVal[..^1]),
-                'i' => int.Parse(rVal[..^1]),
-                'l' => long.Parse(rVal[..^1]),
-                'f' => float.Parse(rVal[..^1]),
-                'd' => double.Parse(rVal[..^1]),
-                'm' => decimal.Parse(rVal[..^1]),
-                _ => throw new InvalidStateException("numeric literal type indentification failed, this shouldn't happen"),
-            };
+                value = rVal[^1] switch
+                {
+                    's' => short.Parse(rVal[..^1]),
+                    'i' => int.Parse(rVal[..^1]),
+                    'l' => long.Parse(rVal[..^1]),
+                    'f' => float.Parse(rVal[..^1]),
+                    'd' => double.Parse(rVal[..^1]),
+                    'm' => decimal.Parse(rVal[..^1]),
+                    _ => throw new InvalidStateException("numeric literal type indentification failed, this shouldn't happen"),
+                };
+
+            }
+            catch (OverflowException e) 
+            {
+                throw new NumericOverflowException(e.Message);
+            }
 
             if (value.Equals(float.PositiveInfinity))
-                throw new OverflowException($"\"{rVal}\" is too small or too large.");
+                throw new NumericOverflowException($"\"{rVal}\" is too small or too large.");
 
             ICommand c = CommandFor(NUMERIC_LITERAL_TYPE, value.GetType(), () => value);
             if (parse.Equals(string.Empty))
@@ -183,7 +192,7 @@ namespace GSR.CommandRunner
                 else if (parse[0].Equals('('))
                 {
                     if (!typeof(ICommand).IsAssignableFrom(value?.GetType()))
-                        throw new InvalidOperationException("Can't invoke non-command varaible.");
+                        throw new InvalidCommandOperationException("Can't invoke non-command varaible.");
 
                     return ReadCommand((ICommand)value, parse, chainedType, chainedOn);
                 }
@@ -203,7 +212,7 @@ namespace GSR.CommandRunner
                 if (chainedType != ChainType.NONE)
                 {
                     if (!(c.ParameterTypes.Length >= 1))
-                        throw new InvalidOperationException("Can't chain to function without a parameter");
+                        throw new InvalidCommandOperationException("Can't chain to function without a parameter");
 
                     if (chainedOn != null && !c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
                         throw new TypeMismatchException($"Chained type mismatched. Expected {c.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
@@ -301,15 +310,6 @@ namespace GSR.CommandRunner
             }
             throw new NotImplementedException();
         } // end CommandInvokationFor()
-
-        private ICommand CommandFor(string type, Type returnType, object? chainedOn, Func<object?> value)
-        {
-            throw new NotImplementedException();
-            // included chained on ? parameters in results
-            // Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
-        } // end CommandForChained()
-
-        private ICommand CommandForFunctionChained(string type, Type returnType, object? chainedOn, object?[] args, Func<object?> value) => throw new NotImplementedException();
 
 
 

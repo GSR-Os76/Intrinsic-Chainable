@@ -2,22 +2,25 @@
 
 namespace GSR.Tests.CommandRunner
 {
-    public class CommandSetThree
+    public static class CommandSetThree
     {
         [Command]
-        public int Add(int a, int b) => a + b;
+        public static int Add(int a, int b) => a + b;
 
         [Command]
-        public string ToLower(string s) => s.ToLower();
+        public static string ToLower(string s) => s.ToLower();
 
         [Command]
-        public string ToUpper(string s) => s.ToUpper();
+        public static string ToUpper(string s) => s.ToUpper();
 
-        public string Range(string s, int start, int end) => s[(start< 0 ? ^start : start)..(end < 0 ? ^end : end)];
+        [Command]
+        public static string Range(string s, int start, int end) => s[(start< 0 ? ^start : start)..(end < 0 ? ^end : end)];
 
-        public void Parameterless() { } // end Parameterless()
+        [Command]
+        public static void Parameterless() { } // end Parameterless()
 
-        public bool IsCommand(object? val) => typeof(ICommand).IsAssignableFrom(val?.GetType());
+        [Command]
+        public static bool IsCommand(object? val) => typeof(ICommand).IsAssignableFrom(val?.GetType());
 
     } // end class
 } // end namespace

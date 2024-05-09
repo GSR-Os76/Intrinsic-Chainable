@@ -34,7 +34,7 @@ namespace GSR.Tests.CommandRunner
         public void TestStringLiteralInterpret(string command, string result) => Assert.AreEqual(result, Interpreter().Evaluate(command).Execute());
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         public void TestChainToStringLiteral() => Interpreter().Evaluate("\"a\".\"chainedTo\"");
 
         [TestMethod]
@@ -136,7 +136,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestSomeAssignThenFunctionAssignOverwrite()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$O=\"0O0\"", "$O.\"Whatever\"")]
         public void TestVariableChainedToStringLiteral(string assign, string command)
         {
@@ -148,7 +148,7 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$O=\"0O0\"", "$O.0")]
         [DataRow("$O=\"0O0\"", "$O.9")]
         [DataRow("$O=\"0O0\"", "$O.68")]
@@ -236,7 +236,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestValidNumericLiterals()
 
         [TestMethod]
-        [ExpectedException(typeof(OverflowException))]
+        [ExpectedException(typeof(NumericOverflowException))]
         [DataRow("-32769s")]
         [DataRow($"32768s")]
         [DataRow("-2147483649i")]
@@ -248,7 +248,7 @@ namespace GSR.Tests.CommandRunner
         public void TestOverflowNumericLiterals(string command) => Interpreter().Evaluate(command);
 
         [TestMethod]
-        [ExpectedException(typeof(OverflowException))]
+        [ExpectedException(typeof(NumericOverflowException))]
         public void TestOverflowFloatAndDecimalNumericLiteral()
         {
             (new string[]
@@ -277,7 +277,7 @@ namespace GSR.Tests.CommandRunner
 #warning test lots of bad syntax input. like "903-k42d" or "$-30flp 0"
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$Y=\"ll_o27-=d\"", "$Y()")]
         public void TestInvokeNonCommandVariable(string assign, string command)
         {
@@ -287,7 +287,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestInvokeNonCommandVariable()
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$Y=>\"poiuytfdx nmkjhyt\"", "\"Some string value\".$Y()")]
         [DataRow("$Y=>290i", "\"Se\".$Y()")]
         [DataRow("$Y=>\"(_#KD(\"", "26.12056f.$Y()")]
@@ -420,7 +420,7 @@ namespace GSR.Tests.CommandRunner
         public void TestUnreadableArgList(string command) => Interpreter().Evaluate(command);
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("\"\".~Variables()")]
         [DataRow("0f.~Commands()")]
         [DataRow("\"Some Test In a String\".~notRealCommand()")]
@@ -529,22 +529,22 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [DataRow("\"\".>IsCommand()", true)]
-        [DataRow("~Varaibles().>IsCommand()", true)]
+        [DataRow("~Variables().>IsCommand()", true)]
         [DataRow("10.10f.>IsCommand()", true)]
         [DataRow("\"\".IsCommand()", false)]
-        [DataRow("~Varaibles().IsCommand()", false)]
+        [DataRow("~Variables().IsCommand()", false)]
         [DataRow("10.10f.IsCommand()", false)]
         public void TestFunctionChaining(string command, object? expectation) => Assert.AreEqual(Interpreter2().Evaluate(command).Execute(), expectation);
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(UndefinedMemberException))]
         [DataRow("ToLower()")]
         [DataRow("\"fyujng34|\".Range(0)")]
         public void TestWrongArgumentCount(string command) => Interpreter2().Evaluate(command);
 
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(UndefinedMemberException))]
         [DataRow("7l.Parameterless()")]
         [DataRow("\"\".Parameterless()")]
         // variable?
@@ -567,14 +567,14 @@ namespace GSR.Tests.CommandRunner
         public void TestUndefinedCommand(string command) => Interpreter().Evaluate(command);
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("ToLower(>?)")]
-        [DataRow("Range(>, 0, >?)")]
-        [DataRow("~Commands(>?)")]
+        [DataRow("Range(?, 0f, >?)")]
+        // different case as also is invalid count[DataRow("~Commands(>?)")]
         public void TestFunctionParameterization(string command) => Interpreter2().Evaluate(command);
 
         [TestMethod]
-        [ExpectedException(typeof(InvalidOperationException))]
+        [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$_4 =>ToUpper(?)", "$_4(>?)")]
         public void TestFunctionParameterizationOfVariable(string assign, string command)
         {

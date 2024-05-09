@@ -1,7 +1,7 @@
 ﻿namespace GSR.CommandRunner
 {
 	[Serializable]
-	public class TypeMismatchException : Exception
+	public class TypeMismatchException : InterpreterException
 	{
 		public TypeMismatchException() { }
 		public TypeMismatchException(string message) : base(message) { }
