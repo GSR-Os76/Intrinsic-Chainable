@@ -6,6 +6,8 @@ namespace GSR.Tests.CommandRunner
     [TestClass]
     public class TestCommandInterpreter
     {
+        const int MetaCommandCount = 2;
+
         public CommandInterpreter Interpreter() => new CommandInterpreter(new CommandSet());
 
 
@@ -444,6 +446,30 @@ namespace GSR.Tests.CommandRunner
             Logger.LogMessage(value); // intentionally left for the time
             Assert.AreEqual(newlinesExpected, value.Count((x) => x == '\n'));
         } // end TestMetaCommandVariables
+
+        [TestMethod]
+        public void TestMetaCommandCommandsDefault() 
+        {
+            ICommandInterpreter ci = Interpreter();
+
+            object? rawValue = ci.Evaluate("~Commands()").Execute();
+            Assert.IsNotNull(rawValue);
+            string value = (string)rawValue;
+            Logger.LogMessage(value); // intentionally left for the times
+            Assert.AreEqual(2 + MetaCommandCount, value.Count((x) => x == '\n'));
+        } // end TestMetaCommandCommands()
+
+        [TestMethod]
+        public void TestMetaCommandCommands()
+        {
+            ICommandInterpreter ci = new CommandInterpreter(new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) }));
+
+            object? rawValue = ci.Evaluate("~Commands()").Execute();
+            Assert.IsNotNull(rawValue);
+            string value = (string)rawValue;
+            Logger.LogMessage(value); // intentionally left for the times
+            Assert.AreEqual(2 + MetaCommandCount + 6, value.Count((x) => x == '\n'));
+        } // end TestMetaCommandCommands()
 
     } // end class
 } // end namespace

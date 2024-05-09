@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Immutable;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace GSR.CommandRunner
@@ -288,9 +289,9 @@ namespace GSR.CommandRunner
 
         private ICommand CommandFor(string type, Type returnType, Func<object?> value) => new Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
 
-        private ICommand CommandInvokationFor(string type, ICommand c, ChainType chainType, object? chainedOn) 
+        private ICommand CommandInvokationFor(string type, ICommand c, ChainType chainType, object? chainedOn)
         {
-            if (chainType == ChainType.CHAIN) 
+            if (chainType == ChainType.CHAIN)
             {
                 bool hasParams = false;
                 if (hasParams)
@@ -314,15 +315,17 @@ namespace GSR.CommandRunner
 
         public static class MetaCommands
         {
+#warning, add Help command
+
             [Command]
-            public static string Variables(CommandInterpreter self) 
+            public static string Variables(CommandInterpreter self)
             {
                 IEnumerable<Tuple<string, string?, string?>> rows = self.m_sessionContext.Variables.Select((x) => Tuple.Create(
-                    x.Name, 
-                    x.Value?.GetType()?.ToString(), 
-                    x.Value?.ToString()));
+                    $"${x.Name}",
+                    x.Value?.GetType()?.ToString(),
+                    x.Value?.ToString())).ToImmutableList();
 
-                Tuple<int, int, int> maxLengths = rows.Count() >= 1 
+                Tuple<int, int, int> maxLengths = rows.Count() >= 1
                     ? Tuple.Create(
                     rows.Select((x) => x.Item1.Length).Max() + 1,
                     rows.Select((x) => x.Item2?.Length ?? 4).Max(),
@@ -331,33 +334,102 @@ namespace GSR.CommandRunner
                     : Tuple.Create(0, 0, 0);
 
                 string nameColumnName = "Name";
-                string TypeColumnName = "Type";
-                string ValueColumnName = "Value";
+                string typeColumnName = "Type";
+                string valueColumnName = "Value";
 
                 maxLengths = Tuple.Create(
                     Math.Max(maxLengths.Item1, nameColumnName.Length),
-                    Math.Max(maxLengths.Item2, TypeColumnName.Length),
-                    Math.Max(maxLengths.Item3, ValueColumnName.Length)
+                    Math.Max(maxLengths.Item2, typeColumnName.Length),
+                    Math.Max(maxLengths.Item3, valueColumnName.Length)
                     );
 
                 string formatter = $" {{0, -{maxLengths.Item1}}} | {{1, -{maxLengths.Item2}}} | {{2, -{maxLengths.Item3}}} ";
                 string columnHeader = string.Format(formatter,
                     nameColumnName,
-                    TypeColumnName,
-                    ValueColumnName);
+                    typeColumnName,
+                    valueColumnName);
 
                 StringBuilder sb = new();
                 sb.AppendLine(columnHeader);
                 sb.AppendLine(new string('-', columnHeader.Length));
 
-                foreach(Tuple<string, string?, string?> row in rows)
-                    sb.AppendLine(string.Format(formatter, 
-                        $"${row.Item1}", 
-                        row.Item2 ?? "null", 
+                foreach (Tuple<string, string?, string?> row in rows)
+                    sb.AppendLine(string.Format(formatter,
+                        row.Item1,
+                        row.Item2 ?? "null",
                         row.Item3 ?? "null"));
 
                 return sb.ToString();
             } // end Variables()
+
+            [Command]
+            public static string Commands(CommandInterpreter self)
+            {
+                IEnumerable<Tuple<string, string, string[]>> rows = s_metaCommands.Commands
+                    .Select((x) => Tuple.Create(
+                    $"~{x.Name}",
+                    x.ReturnType.ToString(),
+                    x.ParameterTypes.Select((x) => x.ToString()).ToArray()))
+                    .OrderBy((x) => x.Item1[1..])
+                    .Concat(
+                        self.m_commands.Commands
+                        .Select((x) => Tuple.Create(
+                        x.Name,
+                        x.ReturnType.ToString(),
+                        x.ParameterTypes.Select((x) => x.ToString()).ToArray()))
+                        .OrderBy((x) => x.Item1)
+                    ).ToImmutableList();
+
+                int nameColumnMax = rows.Count() < 1 ? 0 : rows.Select((x) => x.Item1.Length).Max();
+                int returnTypeColumnMax = rows.Count() < 1 ? 0 : rows.Select((x) => x.Item2.Length).Max();
+                int parameterTypesColumnCountMax = rows.Count() < 1 ? 0 : rows.Select((x) => x.Item3.Length).Max();
+
+                string nameColumnName = "Name";
+                string returnTypeColumnName = "Return Type";
+                string[] parameterTypeColumnNames = new string[parameterTypesColumnCountMax];
+
+                for (int i = 0; i < parameterTypesColumnCountMax; i++)
+                    parameterTypeColumnNames[i] = $"Paramater {i + 1} Type";
+
+                nameColumnMax = Math.Max(nameColumnMax, nameColumnName.Length);
+                returnTypeColumnMax = Math.Max(returnTypeColumnMax, returnTypeColumnName.Length);
+                int[] parameterTypeColumnMaximums = new int[parameterTypesColumnCountMax];
+
+                for (int i = 0; i < parameterTypesColumnCountMax; i++)
+                {
+                    IEnumerable<int> q = rows
+                            .Where((x) => x.Item3.Length >= i + 1)
+                            .Select((x) => x.Item3[i].Length);
+                    parameterTypeColumnMaximums[i] = Math.Max(parameterTypeColumnNames[i].Length, q.Any() ? q.Max() : 0);
+                }
+
+                string formatter = $" {{0, -{nameColumnMax}}} | {{1, -{returnTypeColumnMax}}}";
+                StringBuilder formatBuilder = new(formatter);
+                for (int i = 0; i < parameterTypesColumnCountMax; i++)
+                    formatBuilder.Append($" | {{{i + 2}, -{parameterTypeColumnMaximums[i]}}} ");
+
+                formatter = formatBuilder.ToString();
+
+                string columnHeader = string.Format(formatter,
+                    new string[] { nameColumnName, returnTypeColumnName }.Union(parameterTypeColumnNames).ToArray());
+
+                StringBuilder sb = new();
+                sb.AppendLine(columnHeader);
+                sb.AppendLine(new string('-', columnHeader.Length));
+
+                foreach (Tuple<string, string, string[]> row in rows)
+                {
+                    string[] parameterTypes = new string[parameterTypesColumnCountMax].Select((x) => string.Empty).ToArray();
+                    for (int i = 0; i < row.Item3.Length; i++)
+                        parameterTypes[i] = row.Item3[i];
+
+                    sb.AppendLine(string.Format(formatter,
+                            new string[] { row.Item1, row.Item2 }.Concat(parameterTypes).ToArray()));
+                }
+
+
+                return sb.ToString();
+            } // end Commands()
 
 
         } // end innerclass
