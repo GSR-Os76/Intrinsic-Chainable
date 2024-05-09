@@ -315,7 +315,35 @@ namespace GSR.CommandRunner
 
         public static class MetaCommands
         {
-#warning, add Help command
+            [Command]
+            public static string Help(CommandInterpreter self) 
+            {
+                return
+                    $"Run ~{nameof(Help)}() to get an overview of general syntax, and helper commands. \r\n" +
+                    $"Run ~{nameof(Variables)}() to view all current variables, thier names/identifiers, their current types, and their values. \r\n" +
+                    $"Run ~{nameof(Commands)}() to view all current commands, thier names/identifiers, their return types, and their parameter types if that applies. \r\n" +
+                    $"\r\n" +
+                    $"Numeric Literals: \r\n" +
+                    $"Six types of numeric literals are provided. \r\n" +
+                    $"Three integral types: s(16bit), i(32bit), l(64bit) \r\n" +
+                    $"Three floating type: f(32bit), d(64bit), m(128bit) \r\n" +
+                    $"All numerics must be followed by the symbol for their type. \r\n" +
+                    $"Including a decimal point in an integral will cause an expection, even if it's just \".0\". \r\n" +
+                    $"Numeric must always start with a digit. \r\n" +
+                    $"Any value exceeding the maximum or minimum value for it's type will triger an exception. \r\n" +
+                    $"\r\n" +
+                    $"String Literals: \r\n" +
+                    $"String literals are started an ended by a double quotation mark. \r\n" +
+                    $"A double quotation mark can be escaped when proceeded by a single backslash. \r\n" +
+                    $"A backslash can be escaped when proceeded by a single backslash. \r\n" +
+                    $"\r\n" +
+                    $"Variables: \r\n" +
+                    $"\r\n" +
+                    $"Command Invokation: \r\n" +
+                    $"\r\n" +
+                    $"Chaining: \r\n";
+#warning finish
+            } // end Help()
 
             [Command]
             public static string Variables(CommandInterpreter self)
