@@ -27,7 +27,7 @@
         public object? Execute(object?[] parameters)
         {
             if (ParameterTypes.Length != parameters.Length)
-                throw new InvalidCommandOperationException($"Expected {ParameterTypes.Length} arguements, was given {parameters.Length}");
+                throw new InvalidCommandOperationException($"Expected {ParameterTypes.Length} arguments, was given {parameters.Length}");
 
             for (int i = 0; i < ParameterTypes.Length; i++)
                 if (!ParameterTypes[i].IsAssignableFrom(parameters[i]?.GetType()))

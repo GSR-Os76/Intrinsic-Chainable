@@ -17,6 +17,9 @@ namespace GSR.Tests.CommandRunner
         public static string Range(string s, int start, int end) => s[(start< 0 ? ^start : start)..(end < 0 ? ^end : end)];
 
         [Command]
+        public static int Count(string s) => s.Length;
+
+        [Command]
         public static void Parameterless() { } // end Parameterless()
 
         [Command]

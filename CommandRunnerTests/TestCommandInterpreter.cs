@@ -504,7 +504,9 @@ namespace GSR.Tests.CommandRunner
         [DataRow("ToUpper(?).Count()", typeof(int), typeof(string))]
         public void TestParameterization(string command, Type expectedReturnType, params Type[] expectedParamTypes) 
         {
-            ICommand c = Interpreter2().Evaluate(command);
+            ICommandInterpreter ci = Interpreter2();
+            ICommand c = ci.Evaluate(command);
+
             Assert.AreEqual(expectedReturnType, c.ReturnType);
             Assert.AreEqual(expectedParamTypes.Length, c.ParameterTypes.Length);
             for(int i = 0; i < expectedParamTypes.Length; i++)
@@ -588,7 +590,7 @@ namespace GSR.Tests.CommandRunner
         [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("$Arv = > \"\"")]
         public void TestInvalidFunctionAssign(string command) => Interpreter().Evaluate(command);
-        // test that = > if invalid
+        // test that function returning command chained into command doesn't try to parameterize with the first
 
 
     } // end class

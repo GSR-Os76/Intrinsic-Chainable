@@ -211,7 +211,7 @@ namespace GSR.CommandRunner
                 if (chainedOn is not null)
                 {
                     bool asIsMatch = c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType());
-                    bool validTyped = chainedType == ChainType.CHAIN && chainedOn is ICommand co && co.ParameterTypes.Any((x) => x == typeof(Parameterizer))
+                    bool validTyped = chainedType == ChainType.CHAIN && chainedOn is ICommand co && co.ParameterTypes.Length > 0
                         ? c.ParameterTypes[0].IsAssignableFrom(co.ReturnType)
                         : asIsMatch;
                     if (!validTyped)
@@ -239,7 +239,7 @@ namespace GSR.CommandRunner
                         throw new InvalidCommandOperationException("Parameterize can't also be functional");
 
                     parse = parse[1..].TrimStart();
-                    args.Add(Tuple.Create(functional, (ICommand)Parameterizer.Inst));
+                    args.Add(Tuple.Create(functional, (ICommand)ParameterizedCommand.Parameterizer.Inst));
                 }
                 else
                 {
@@ -322,75 +322,94 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Unexpected character while reading arguments: \"{parse[0]}\"");
         } // end GetArgumentCount()
 
-#warning > before argument as well.
-
 
 
         private ICommand CommandFor(string type, Action value) => new Command($"{type}_{++m_uniqueNumber}", typeof(void), Array.Empty<Type>(), (x) => { value(); return null; });
 
         private ICommand CommandFor(string type, Type returnType, Func<object?> value) => new Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
 
-        private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn) => CommandInvocationFor(type, c, chainType, chainedOn, new List<Tuple<bool, ICommand>>());
+
 
         private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
         {
-            int argCount = 0;
-            if (chainType == ChainType.CHAIN && (typeof(ICommand).IsAssignableFrom(chainedOn?.GetType())))
-                argCount += ((ICommand)chainedOn).ParameterTypes.Length;
+            string name = $"{type}_{++m_uniqueNumber}";
+            Tuple<Type[], bool> paramInfo = ParamInfoFor(c, chainType, chainedOn, arguments);
+            Func<object?[], object?> func = (x) => FunctionFor(x, c, chainType, chainedOn, arguments);
 
-            foreach (Tuple<bool, ICommand> argument in arguments)
+            return paramInfo.Item2
+                ? new ParameterizedCommand(name, c.ReturnType, paramInfo.Item1, func)
+                : new Command(name, c.ReturnType, paramInfo.Item1, func);
+        } // end CommandInvocationFor()
+
+        private object? FunctionFor(object?[] x, ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
+        {
+            int argNum = 0;
+            IList<object?> innerArguments = new List<object?>();
+            IList<Tuple<bool, ICommand>> a = arguments.ToList();
+
+            if (chainType != ChainType.NONE)
             {
-                if (!argument.Item1)
+                if (chainType == ChainType.CHAIN && chainedOn is ParameterizedCommand co)
+                    a.Insert(0, Tuple.Create(false, (ICommand)co));
+                else
+                    innerArguments.Add(chainedOn);
+            }
+
+            foreach (Tuple<bool, ICommand> argument in a)
+            {
+                if (argument.Item1)
+                    innerArguments.Add(argument.Item2);
+                else
                 {
-                    if (argument.Item2.GetType() == typeof(Parameterizer))
-                        argCount++;
-                    else
-                        argCount += argument.Item2
-                            .ParameterTypes.Length;
+                    if (argument.Item2.GetType() == typeof(ParameterizedCommand.Parameterizer))
+                        innerArguments.Add(x[argNum++]);
+                    else if(argument.Item2 is ParameterizedCommand)
+                        innerArguments.Add(argument.Item2.Execute(argument.Item2
+                            .ParameterTypes
+                            .Select((y) => x[argNum++])
+                            .ToArray()
+                            ));
+                        else
+                        innerArguments.Add(argument.Item2.Execute());
                 }
             }
 
-            Func<object?[], object?> func = (x) =>
+            return c.Execute(innerArguments.ToArray());
+        } // end FunctionFor()
+
+        private Tuple<Type[], bool> ParamInfoFor(ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
+        {
+            bool isParameterized = false;
+            IList<Type> paramTypes = new List<Type>();
+
+            IList<Tuple<bool, ICommand>> a = arguments.ToList();
+            if (chainType != ChainType.NONE)
             {
-                int argNum = 0;
-                IList<object?> innerArguments = new List<object?>();
-                IList<Tuple<bool, ICommand>> a = arguments.ToList();
+                if (chainType == ChainType.CHAIN && chainedOn is ParameterizedCommand co)
+                    a.Insert(0, Tuple.Create(false, (ICommand)co));
+            }
 
-                if (chainType != ChainType.NONE)
+            int argNum = 0;
+            foreach (Tuple<bool, ICommand> argument in a)
+            {
+                if (!argument.Item1)
                 {
-                    if (chainType == ChainType.CHAIN && (typeof(ICommand).IsAssignableFrom(chainedOn?.GetType())))
-                        a.Add(Tuple.Create(false, (ICommand)chainedOn));
-                    else
-                        innerArguments.Add(chainedOn);
-                }
-
-                foreach (Tuple<bool, ICommand> argument in a)
-                {
-                    if (argument.Item1)
-                        innerArguments.Add(argument.Item2);
-                    else
+                    if (argument.Item2.GetType() == typeof(ParameterizedCommand.Parameterizer))
                     {
-                        if (argument.Item2.GetType() == typeof(Parameterizer))
-                            innerArguments.Add(x[argNum++]);
-                        else
-                            innerArguments.Add(argument.Item2.Execute(argument.Item2
-                                .ParameterTypes
-                                .Select((y) => x[argNum++])
-                                .ToArray()
-                                ));
+                        isParameterized = true;
+                        paramTypes.Add(c.ParameterTypes[argNum]);
+                    }                        
+                    else if (argument.Item2 is ParameterizedCommand) 
+                    {
+                        isParameterized = true;
+                        argument.Item2.ParameterTypes.ToList().ForEach((x) => paramTypes.Add(x));
                     }
                 }
+                argNum++;
+            }
 
-                return c.Execute(innerArguments.ToArray());
-            };
-
-            return new Command(
-                $"{type}_{++m_uniqueNumber}",
-                c.ReturnType,
-#warning, add an accurate type list.
-                new Type[argCount].Select((x) => typeof(object)).ToArray(), 
-                func);
-        } // end CommandInvocationFor()
+            return Tuple.Create(paramTypes.ToArray(), isParameterized);
+        } // end ParamTypesFor()
 
 
 
@@ -572,22 +591,27 @@ namespace GSR.CommandRunner
 
         } // end inner class
 
-        private class Parameterizer : ICommand
+        private class ParameterizedCommand : Command
         {
-            public static Parameterizer Inst = new();
-
-            private Parameterizer() { } // end constructor
-
-            public string Name => throw new NotImplementedException();
-
-            public Type ReturnType => throw new NotImplementedException();
-
-            public Type[] ParameterTypes => throw new NotImplementedException();
-
-            public object? Execute(object?[] parameters)
+            public class Parameterizer : ICommand
             {
-                throw new NotImplementedException();
-            } // end Execute()
+                public static Parameterizer Inst = new();
+
+                private Parameterizer() { } // end constructor
+
+                public string Name => throw new NotImplementedException();
+
+                public Type ReturnType => throw new NotImplementedException();
+
+                public Type[] ParameterTypes => throw new NotImplementedException();
+
+                public object? Execute(object?[] parameters)
+                {
+                    throw new NotImplementedException();
+                } // end Execute()
+            } // end inner class
+
+            public ParameterizedCommand(string name, Type returnType, Type[] parameterTypes, Func<object?[], object?> func) : base(name, returnType, parameterTypes, func) { } // end constructor()
         } // end inner class
 
     } // end outer class
