@@ -500,9 +500,9 @@ namespace GSR.Tests.CommandRunner
         } // end TestChainWithAnotherParam()
 
         [TestMethod]
-        [DataRow("ToLower(?).Range(0, ? ) ", typeof(string), typeof(string), typeof(int))]
+        [DataRow("ToLower(?).Range(0i, ? ) ", typeof(string), typeof(string), typeof(int))]
         [DataRow("ToUpper(?).Count()", typeof(int), typeof(string))]
-        public void TestParameterization(string command, Type expectedReturnType, Type[] expectedParamTypes) 
+        public void TestParameterization(string command, Type expectedReturnType, params Type[] expectedParamTypes) 
         {
             ICommand c = Interpreter2().Evaluate(command);
             Assert.AreEqual(expectedReturnType, c.ReturnType);
@@ -552,10 +552,10 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [DataRow("IsCommand(>\"\")", true)]
-        [DataRow("IsCommand(>~Varaibles())", true)]
+        [DataRow("IsCommand(>~Variables())", true)]
         [DataRow("IsCommand(>10.10f)", true)]
         [DataRow("IsCommand(\"\")", false)]
-        [DataRow("IsCommand(~Varaibles())", false)]
+        [DataRow("IsCommand(~Variables())", false)]
         [DataRow("IsCommand(10.10f)", false)]
         public void TestFunctionArg(string command, object? expectation) => Assert.AreEqual(Interpreter2().Evaluate(command).Execute(), expectation);
 

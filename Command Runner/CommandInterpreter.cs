@@ -89,7 +89,7 @@ namespace GSR.CommandRunner
                 string name = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
                 parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty);
 
-                int paramCount = GetArgumentCount(parse) + chainedType != ChainType.NONE ? 1 : 0;
+                int paramCount = GetArgumentCount(parse) + (chainedType != ChainType.NONE ? 1 : 0);
                 ICommand c = (isMeta ? s_metaCommands : m_commands).GetCommand(name, paramCount);
                 return ReadCommand(c, parse, chainedType, chainedOn);
             }
@@ -123,7 +123,7 @@ namespace GSR.CommandRunner
                 };
 
             }
-            catch (OverflowException e) 
+            catch (OverflowException e)
             {
                 throw new NumericOverflowException(e.Message);
             }
@@ -203,47 +203,79 @@ namespace GSR.CommandRunner
 
         private ICommand ReadCommand(ICommand c, string argsInput, ChainType chainedType = ChainType.NONE, object? chainedOn = null)
         {
-#warning implement
-            string parse = argsInput[1..];
-
-            if (parse[0].Equals(')'))
+            if (chainedType != ChainType.NONE)
             {
-                parse = parse[1..].TrimStart();
-                if (chainedType != ChainType.NONE)
-                {
-                    if (!(c.ParameterTypes.Length >= 1))
-                        throw new InvalidCommandOperationException("Can't chain to function without a parameter");
+                if (!(c.ParameterTypes.Length >= 1))
+                    throw new InvalidCommandOperationException("Can't chain to function without a parameter");
 
-                    if (chainedOn != null && !c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType()))
+                if (chainedOn is not null)
+                {
+                    bool asIsMatch = c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType());
+                    bool validTyped = chainedType == ChainType.CHAIN && chainedOn is ICommand co && co.ParameterTypes.Any((x) => x == typeof(Parameterizer))
+                        ? c.ParameterTypes[0].IsAssignableFrom(co.ReturnType)
+                        : asIsMatch;
+                    if (!validTyped)
                         throw new TypeMismatchException($"Chained type mismatched. Expected {c.ParameterTypes[0]} or subtype,  got {chainedOn?.GetType()}");
                 }
+            }
 
-                if (parse.Equals(string.Empty))
+            string parse = argsInput[1..].TrimStart();
+
+            IList<Tuple<bool, ICommand>> args = new List<Tuple<bool, ICommand>>();
+            while (Regex.IsMatch(parse, ARGUMENT_REGEX))
+            {
+                string s = Regex.Match(parse, ARGUMENT_REGEX).Value;
+                bool functional = false;
+                if (s[0].Equals('>'))
                 {
-                    if (chainedType != ChainType.NONE)
-                        return CommandInvokationFor(COMMAND_INVOKE_TYPE, c, chainedType, chainedOn);
-                    else
-                        return CommandFor(COMMAND_INVOKE_TYPE, c.ReturnType, () => c.Execute());
-                }
-                else if (parse[0].Equals('.'))
-                {
-                    throw new NotImplementedException();
+                    functional = true;
+                    s = s[1..].TrimStart();
                     parse = parse[1..].TrimStart();
-                    if (chainedType != ChainType.NONE)
-                        return _Evaluate(parse, ChainType.CHAIN, c.Execute());
-                    else
-                        return _Evaluate(parse, ChainType.CHAIN, c.Execute());
+                }
+
+                if (s[0].Equals('?'))
+                {
+                    if (functional)
+                        throw new InvalidCommandOperationException("Parameterize can't also be functional");
+
+                    parse = parse[1..].TrimStart();
+                    args.Add(Tuple.Create(functional, (ICommand)Parameterizer.Inst));
                 }
                 else
-                    throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"{c}\"");
+                {
+                    args.Add(Tuple.Create(functional, _Evaluate(s)));
+                    parse = Regex.Replace(parse, ARGUMENT_REGEX, "");
+                }
+
+
+                if (parse.Length == 0)
+                    throw new InvalidSyntaxException("Argument not ended, expected comma or close parenthesis.");
+                if (parse[0].Equals(','))
+                    parse = parse[1..].TrimStart();
+                else if (!parse[0].Equals(')'))
+                    throw new InvalidSyntaxException($"Unexpected character \"{parse[0]}\" after argument.");
             }
+
+            int argCount = args.Count() + (chainedType != ChainType.NONE ? 1 : 0);
+            if (argCount != c.ParameterTypes.Length)
+                throw new InvalidCommandOperationException($"Parameter count mismatch for command: {c.Name}. Expected {c.ParameterTypes.Length}, got {argCount}.");
+
+#warning validate args s
+
+            if (!parse[0].Equals(')'))
+                throw new InvalidSyntaxException($"Unexpected character \"{parse[0]}\"at args list close"); // shouldn't be an attainable state
+
+            parse = parse[1..].TrimStart();
+
+            ICommand command = CommandInvocationFor(COMMAND_INVOKE_TYPE, c, chainedType, chainedOn, args);
+            if (parse.Length == 0)
+                return command;
+            if (IsChain(parse))
+                return Chain(parse,
+                    command.ParameterTypes.Length == 0 ? command.Execute() : command,
+                    command);
             else
-            {
-                throw new NotImplementedException();
-                // capture arguments etc
-                //ARGUMENT_REGEX
-                // if command try to invoke
-            }
+                throw new InvalidSyntaxException($"Unexpected character: \"{parse[0]}\", after variable invoke for: \"{c}\"");
         } // end ReadCommand()
 
 
@@ -298,25 +330,74 @@ namespace GSR.CommandRunner
 
         private ICommand CommandFor(string type, Type returnType, Func<object?> value) => new Command($"{type}_{++m_uniqueNumber}", returnType, Array.Empty<Type>(), (x) => value());
 
-        private ICommand CommandInvokationFor(string type, ICommand c, ChainType chainType, object? chainedOn)
-        {
-            if (chainType == ChainType.CHAIN)
-            {
-                bool hasParams = false;
-                if (hasParams)
-                    throw new NotImplementedException();
+        private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn) => CommandInvocationFor(type, c, chainType, chainedOn, new List<Tuple<bool, ICommand>>());
 
-                return CommandFor(type, c.ReturnType, () => c.Execute(new object?[] { chainedOn }));
+        private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
+        {
+            int argCount = 0;
+            if (chainType == ChainType.CHAIN && (typeof(ICommand).IsAssignableFrom(chainedOn?.GetType())))
+                argCount += ((ICommand)chainedOn).ParameterTypes.Length;
+
+            foreach (Tuple<bool, ICommand> argument in arguments)
+            {
+                if (!argument.Item1)
+                {
+                    if (argument.Item2.GetType() == typeof(Parameterizer))
+                        argCount++;
+                    else
+                        argCount += argument.Item2
+                            .ParameterTypes.Length;
+                }
             }
-            throw new NotImplementedException();
-        } // end CommandInvokationFor()
+
+            Func<object?[], object?> func = (x) =>
+            {
+                int argNum = 0;
+                IList<object?> innerArguments = new List<object?>();
+                IList<Tuple<bool, ICommand>> a = arguments.ToList();
+
+                if (chainType != ChainType.NONE)
+                {
+                    if (chainType == ChainType.CHAIN && (typeof(ICommand).IsAssignableFrom(chainedOn?.GetType())))
+                        a.Add(Tuple.Create(false, (ICommand)chainedOn));
+                    else
+                        innerArguments.Add(chainedOn);
+                }
+
+                foreach (Tuple<bool, ICommand> argument in a)
+                {
+                    if (argument.Item1)
+                        innerArguments.Add(argument.Item2);
+                    else
+                    {
+                        if (argument.Item2.GetType() == typeof(Parameterizer))
+                            innerArguments.Add(x[argNum++]);
+                        else
+                            innerArguments.Add(argument.Item2.Execute(argument.Item2
+                                .ParameterTypes
+                                .Select((y) => x[argNum++])
+                                .ToArray()
+                                ));
+                    }
+                }
+
+                return c.Execute(innerArguments.ToArray());
+            };
+
+            return new Command(
+                $"{type}_{++m_uniqueNumber}",
+                c.ReturnType,
+#warning, add an accurate type list.
+                new Type[argCount].Select((x) => typeof(object)).ToArray(), 
+                func);
+        } // end CommandInvocationFor()
 
 
 
         public static class MetaCommands
         {
             [Command]
-            public static string Help(CommandInterpreter self) 
+            public static string Help(CommandInterpreter self)
             {
                 return
                     $"Run ~{nameof(Help)}() to get an overview of general syntax, and helper commands. \r\n" +
@@ -490,5 +571,24 @@ namespace GSR.CommandRunner
             } // end Commands()
 
         } // end inner class
+
+        private class Parameterizer : ICommand
+        {
+            public static Parameterizer Inst = new();
+
+            private Parameterizer() { } // end constructor
+
+            public string Name => throw new NotImplementedException();
+
+            public Type ReturnType => throw new NotImplementedException();
+
+            public Type[] ParameterTypes => throw new NotImplementedException();
+
+            public object? Execute(object?[] parameters)
+            {
+                throw new NotImplementedException();
+            } // end Execute()
+        } // end inner class
+
     } // end outer class
 } // end namespace
