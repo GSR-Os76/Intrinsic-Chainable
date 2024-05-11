@@ -590,8 +590,24 @@ namespace GSR.Tests.CommandRunner
         [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("$Arv = > \"\"")]
         public void TestInvalidFunctionAssign(string command) => Interpreter().Evaluate(command);
+        
+        
+        
         // test that function returning command chained into command doesn't try to parameterize with the first
 
+        [TestMethod]
+        [DataRow("ToUpper(?)", "A", "a")]
+        [DataRow("ToUpper(?)", "A", "A")]
+        [DataRow("ToLower(ToUpper(?))", "postular", "PostUlAr")]
+        [DataRow("Range(ToLower(ToUpper(?)), 0i, ?)", "po", "PostUlAr", 2)]
+        public void TestInvokeParameterized(string command, object? expectation, params object?[] args) 
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ICommand c = ci.Evaluate(command);
+            Assert.AreEqual(expectation, c.Execute(args));
+        } // end TestInvokeParameterized()
 
+        // test name case causes undefined
+        public void TestParameterizedInsideVariable() { }
     } // end class
 } // end namespace

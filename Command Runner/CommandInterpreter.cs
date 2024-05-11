@@ -17,7 +17,7 @@ namespace GSR.CommandRunner
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
-        private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
+        //private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
 
 #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
@@ -222,9 +222,9 @@ namespace GSR.CommandRunner
             string parse = argsInput[1..].TrimStart();
 
             IList<Tuple<bool, ICommand>> args = new List<Tuple<bool, ICommand>>();
-            while (Regex.IsMatch(parse, ARGUMENT_REGEX))
+            while (!parse[0].Equals(')'))
             {
-                string s = Regex.Match(parse, ARGUMENT_REGEX).Value;
+                string s = CaptureArgument(parse);
                 bool functional = false;
                 if (s[0].Equals('>'))
                 {
@@ -244,7 +244,7 @@ namespace GSR.CommandRunner
                 else
                 {
                     args.Add(Tuple.Create(functional, _Evaluate(s)));
-                    parse = Regex.Replace(parse, ARGUMENT_REGEX, "");
+                    parse = parse[(s.Length)..];
                 }
 
 
@@ -299,16 +299,25 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Expected chain operator, but got {input}");
         } // end Chain()
 
-        public static int GetArgumentCount(string input)
+        public int GetArgumentCount(string input)
         {
+#warning simplify
             string parse = input[1..]; // remove expected parenthesis
             int count = 0;
-            while (Regex.IsMatch(parse, ARGUMENT_REGEX))
+
+            if (parse.Length == 0)
+                throw new InvalidSyntaxException("Expected argument but got nothing.");
+
+            // string arg = CaptureArgument(input);
+            while (!parse[0].Equals(')'))
             {
-                parse = Regex.Replace(parse, ARGUMENT_REGEX, string.Empty);
+                string arg = CaptureArgument(parse);
+                parse = parse[(arg.Length)..];
+
                 ++count;
+
                 if (parse.Length == 0)
-                    throw new InvalidSyntaxException("Command not ended");
+                    throw new InvalidSyntaxException("Command  \argument list not ended.");
                 else if (parse[0].Equals(','))
                     parse = parse[1..].TrimStart();
                 else if (parse[0].Equals(')'))
@@ -316,11 +325,39 @@ namespace GSR.CommandRunner
                 else
                     throw new InvalidSyntaxException($"Unexpected character after command argument: \"{parse[0]}\""); // theoretically unreachable route
             }
+
             if (parse[0].Equals(')'))
                 return count;
             else
+#warning not valid state
                 throw new InvalidSyntaxException($"Unexpected character while reading arguments: \"{parse[0]}\"");
         } // end GetArgumentCount()
+
+        private string CaptureArgument(string input)
+        {
+            // assumes start parenthesis is removed
+            if (input.Length == 0)
+                throw new InvalidSyntaxException("Expected argument but got nothing.");
+
+            int depth = 0;
+            for (int i = 0; i < input.Length; i++)
+            {
+                char c = input[i];
+                if (c.Equals('('))
+                    ++depth;
+                else if (depth == 0 && (c.Equals(',') || c.Equals(')'))) 
+                {
+                    string a = input[..i];
+                    if (a.Length == 0)
+                        throw new InvalidSyntaxException("Arguments may not be empty.");
+
+                    return a;
+                }                    
+                else if (c.Equals(')'))
+                    --depth;
+            }
+            throw new InvalidSyntaxException("Didn't find end of string.");
+        } // end CaptureArgument()
 
 
 
@@ -363,13 +400,13 @@ namespace GSR.CommandRunner
                 {
                     if (argument.Item2.GetType() == typeof(ParameterizedCommand.Parameterizer))
                         innerArguments.Add(x[argNum++]);
-                    else if(argument.Item2 is ParameterizedCommand)
+                    else if (argument.Item2 is ParameterizedCommand)
                         innerArguments.Add(argument.Item2.Execute(argument.Item2
                             .ParameterTypes
                             .Select((y) => x[argNum++])
                             .ToArray()
                             ));
-                        else
+                    else
                         innerArguments.Add(argument.Item2.Execute());
                 }
             }
@@ -398,8 +435,8 @@ namespace GSR.CommandRunner
                     {
                         isParameterized = true;
                         paramTypes.Add(c.ParameterTypes[argNum]);
-                    }                        
-                    else if (argument.Item2 is ParameterizedCommand) 
+                    }
+                    else if (argument.Item2 is ParameterizedCommand)
                     {
                         isParameterized = true;
                         argument.Item2.ParameterTypes.ToList().ForEach((x) => paramTypes.Add(x));
