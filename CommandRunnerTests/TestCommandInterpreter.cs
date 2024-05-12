@@ -608,6 +608,21 @@ namespace GSR.Tests.CommandRunner
         } // end TestInvokeParameterized()
 
         // test name case causes undefined
-        public void TestParameterizedInsideVariable() { }
+
+
+        [TestMethod]
+        [DataRow("$K_ela => Count(?)", "$K_ela.Add(9i)", 18, "~NineLong")]
+        [DataRow("$K_ela => Count(?)", "Add($K_ela, 9i)", 18, "123456789")]
+        [DataRow("$_9 => \"ARms123345\".Range(?, ?)", "$_9.Range(0i, ?)", "ARms1233", 0, -1, -1)]
+        public void TestParameterizedInsideVariable(string varAssign, string command, object? expectation, params object?[] args) 
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ci.Evaluate(varAssign).Execute();
+            ICommand c = ci.Evaluate(command);
+            Assert.AreEqual(expectation, c.Execute(args));
+        } // end TestParameterizedInsideVariable()
+
+
+#warning testc > arg
     } // end class
 } // end namespace

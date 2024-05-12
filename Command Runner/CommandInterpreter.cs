@@ -19,7 +19,7 @@ namespace GSR.CommandRunner
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
         //private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
 
-#warning, add more escapes;
+// #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
         private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
 
@@ -301,14 +301,12 @@ namespace GSR.CommandRunner
 
         public int GetArgumentCount(string input)
         {
-#warning simplify
             string parse = input[1..]; // remove expected parenthesis
             int count = 0;
 
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Expected argument but got nothing.");
 
-            // string arg = CaptureArgument(input);
             while (!parse[0].Equals(')'))
             {
                 string arg = CaptureArgument(parse);
@@ -329,8 +327,7 @@ namespace GSR.CommandRunner
             if (parse[0].Equals(')'))
                 return count;
             else
-#warning not valid state
-                throw new InvalidSyntaxException($"Unexpected character while reading arguments: \"{parse[0]}\"");
+                throw new InvalidStateException($"Unexpected character after reading arguments: \"{parse[0]}\". The branch was anticipated inpossible.");
         } // end GetArgumentCount()
 
         private string CaptureArgument(string input)
@@ -356,7 +353,7 @@ namespace GSR.CommandRunner
                 else if (c.Equals(')'))
                     --depth;
             }
-            throw new InvalidSyntaxException("Didn't find end of string.");
+            throw new InvalidSyntaxException("Didn't find end of argument.");
         } // end CaptureArgument()
 
 
@@ -369,7 +366,10 @@ namespace GSR.CommandRunner
 
         private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
         {
-            string name = $"{type}_{++m_uniqueNumber}";
+#warning perhaps translate arguments that need execution here. This will allow "X.Y(Z)" and "Y(X, Z) to be equivalent where X's a varaible holding a parameterzied command
+    
+
+                string name = $"{type}_{++m_uniqueNumber}";
             Tuple<Type[], bool> paramInfo = ParamInfoFor(c, chainType, chainedOn, arguments);
             Func<object?[], object?> func = (x) => FunctionFor(x, c, chainType, chainedOn, arguments);
 
@@ -419,14 +419,16 @@ namespace GSR.CommandRunner
             bool isParameterized = false;
             IList<Type> paramTypes = new List<Type>();
 
+            int argNum = 0;
             IList<Tuple<bool, ICommand>> a = arguments.ToList();
             if (chainType != ChainType.NONE)
             {
                 if (chainType == ChainType.CHAIN && chainedOn is ParameterizedCommand co)
                     a.Insert(0, Tuple.Create(false, (ICommand)co));
+                else
+                    argNum++;
             }
 
-            int argNum = 0;
             foreach (Tuple<bool, ICommand> argument in a)
             {
                 if (!argument.Item1)
