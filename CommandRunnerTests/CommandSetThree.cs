@@ -25,5 +25,11 @@ namespace GSR.Tests.CommandRunner
         [Command]
         public static bool IsCommand(object? val) => typeof(ICommand).IsAssignableFrom(val?.GetType());
 
+        [Command]
+        public static bool HasXParameters(ICommand c, int x) => c.ParameterTypes.Length == x;
+
+        [Command]
+        public static ICommand ReturnsCommand() => new Command("_p", typeof(string), new Type[] { typeof(string), typeof(string) }, (x) => (string)x[0] + (string)x[1]);
+
     } // end class
 } // end namespace

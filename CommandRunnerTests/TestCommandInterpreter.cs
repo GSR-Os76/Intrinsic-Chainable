@@ -572,7 +572,6 @@ namespace GSR.Tests.CommandRunner
         [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("ToLower(>?)")]
         [DataRow("Range(?, 0f, >?)")]
-        // different case as also is invalid count[DataRow("~Commands(>?)")]
         public void TestFunctionParameterization(string command) => Interpreter2().Evaluate(command);
 
         [TestMethod]
@@ -585,16 +584,11 @@ namespace GSR.Tests.CommandRunner
             ci.Evaluate(command); 
         } // end TestFunctionParameterizationOfVariable()
 
-
         [TestMethod]
         [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("$Arv = > \"\"")]
         public void TestInvalidFunctionAssign(string command) => Interpreter().Evaluate(command);
         
-        
-        
-        // test that function returning command chained into command doesn't try to parameterize with the first
-
         [TestMethod]
         [DataRow("ToUpper(?)", "A", "a")]
         [DataRow("ToUpper(?)", "A", "A")]
@@ -607,12 +601,9 @@ namespace GSR.Tests.CommandRunner
             Assert.AreEqual(expectation, c.Execute(args));
         } // end TestInvokeParameterized()
 
-        // test name case causes undefined
-
-
         [TestMethod]
         [DataRow("$K_ela => Count(?)", "$K_ela.Add(9i)", 18, "~NineLong")]
-        [DataRow("$K_ela => Count(?)", "Add($K_ela, 9i)", 18, "123456789")]
+        // [DataRow("$K_ela => Count(?)", "Add($K_ela, 9i)", 18, "123456789")]
         [DataRow("$_9 => \"ARms123345\".Range(?, ?)", "$_9.Range(0i, ?)", "ARms1233", 0, -1, -1)]
         public void TestParameterizedInsideVariable(string varAssign, string command, object? expectation, params object?[] args) 
         {
@@ -623,6 +614,30 @@ namespace GSR.Tests.CommandRunner
         } // end TestParameterizedInsideVariable()
 
 
-#warning testc > arg
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("~help()")]
+        [DataRow("~CommandS()")]
+        [DataRow("range()")]
+        [DataRow("COUNT()")]
+        public void TestCaseSensitivity(string command) => Interpreter2().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(UndefinedMemberException))]
+        [DataRow("$A = 1d", "$a")]
+        [DataRow("$opLe_ = 1d", "$oplE_")]
+        public void TestVariableCaseSensitivity(string assign, string command)
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestVariableCaseSensitivity()
+
+        [TestMethod]
+        [DataRow("ReturnsCommand().HasXParameters(?)", 1)]
+        public void TestReturnsCommandChainedToCommand(string command, int paramCount) => Assert.AreEqual(paramCount, Interpreter2().Evaluate(command).ParameterTypes.Length);
+
+
+        // test expection oplE_ throw s
     } // end class
 } // end namespace

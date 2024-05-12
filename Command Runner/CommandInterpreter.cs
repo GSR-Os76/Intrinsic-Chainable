@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -205,13 +206,13 @@ namespace GSR.CommandRunner
         {
             if (chainedType != ChainType.NONE)
             {
-                if (!(c.ParameterTypes.Length >= 1))
+                if (c.ParameterTypes.Length <= 0)
                     throw new InvalidCommandOperationException("Can't chain to function without a parameter");
 
                 if (chainedOn is not null)
                 {
                     bool asIsMatch = c.ParameterTypes[0].IsAssignableFrom(chainedOn.GetType());
-                    bool validTyped = chainedType == ChainType.CHAIN && chainedOn is ICommand co && co.ParameterTypes.Length > 0
+                    bool validTyped = chainedType == ChainType.CHAIN && chainedOn is ParameterizedCommand co
                         ? c.ParameterTypes[0].IsAssignableFrom(co.ReturnType)
                         : asIsMatch;
                     if (!validTyped)
@@ -366,10 +367,9 @@ namespace GSR.CommandRunner
 
         private ICommand CommandInvocationFor(string type, ICommand c, ChainType chainType, object? chainedOn, IList<Tuple<bool, ICommand>> arguments)
         {
-#warning perhaps translate arguments that need execution here. This will allow "X.Y(Z)" and "Y(X, Z) to be equivalent where X's a varaible holding a parameterzied command
-    
+#warning perhaps translate arguments that need execution here. This will allow "X.Y(Z)" and "Y(X, Z) to be equivalent where X's a varaible holding a parameterzied command. Alternatively add another chain type. ?whateber parameterizes
 
-                string name = $"{type}_{++m_uniqueNumber}";
+            string name = $"{type}_{++m_uniqueNumber}";
             Tuple<Type[], bool> paramInfo = ParamInfoFor(c, chainType, chainedOn, arguments);
             Func<object?[], object?> func = (x) => FunctionFor(x, c, chainType, chainedOn, arguments);
 
