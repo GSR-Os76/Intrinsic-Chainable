@@ -88,7 +88,10 @@ namespace GSR.CommandRunner
                 }
 
                 string name = Regex.Match(parse, MEMBER_NAME_REGEX).Value;
-                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty);
+                parse = Regex.Replace(parse, MEMBER_NAME_REGEX, string.Empty).Trim();
+
+                if (parse.Length == 0 || !parse[0].Equals('('))
+                    throw new InvalidSyntaxException("Expected an open parenthesis after command name");
 
                 int paramCount = GetArgumentCount(parse) + (chainedType != ChainType.NONE ? 1 : 0);
                 ICommand c = (isMeta ? s_metaCommands : m_commands).GetCommand(name, paramCount);
@@ -108,6 +111,9 @@ namespace GSR.CommandRunner
 
             string rVal = Regex.Match(parse, NUMERIC_REGEX).Value;
             parse = Regex.Replace(parse, NUMERIC_REGEX, string.Empty);
+
+            if (rVal.Length == 0)
+                throw new InvalidSyntaxException($"Couldn't read numeric literal from: \"{input}\"");
 
             object value;
             try

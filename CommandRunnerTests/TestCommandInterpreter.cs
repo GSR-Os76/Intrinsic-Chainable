@@ -635,8 +635,35 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [DataRow("ReturnsCommand().HasXParameters(?)", 1)]
+        [DataRow("HasXParameters(ReturnsCommand(), ?)", 1)]
         public void TestReturnsCommandChainedToCommand(string command, int paramCount) => Assert.AreEqual(paramCount, Interpreter2().Evaluate(command).ParameterTypes.Length);
 
+
+
+        [TestMethod]
+        [ExpectedException(typeof(InterpreterException), AllowDerivedTypes = true)]
+        [DataRow("oplE_")]
+        [DataRow("~")]
+        [DataRow("$")]
+        [DataRow("?")]
+        [DataRow(">")]
+        [DataRow(".~Help")]
+        [DataRow("~Help")]
+        [DataRow("$E = ~Help")]
+        [DataRow("$E => ~Help")]
+        [DataRow("$OP p")]
+        [DataRow("$Var = 0i l")]
+        [DataRow("0I")]
+        [DataRow("0S")]
+        [DataRow("0M")]
+        [DataRow("0o")]
+        [DataRow("0b")]
+        [DataRow("")]
+        [DataRow("$0_ = 0i")]
+        // more bad chains, and bad command'sings
+        // actually  currently works, and is fine. No reason to limit freedom I see. [DataRow("$ = 0i")]
+        [DataRow("~Commands(\"\")")]
+        public void ThrowsInterpreterException(string command) => Interpreter().Evaluate(command);
 
         // test expection oplE_ throw s
     } // end class
