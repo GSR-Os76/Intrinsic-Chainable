@@ -9,26 +9,22 @@ namespace GSR.CommandRunner
 
 
 
-        public object? GetValue(string name, Type targetType)
+        public object? GetValue(string name)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (!q.Any())
                 throw new UndefinedMemberException($"No variable found: {name}");
 
-            Variable v = q.First();
-            if (v.Type != null && !targetType.IsAssignableFrom(v.Type))
-                throw new TypeMismatchException($"Variable type mismatch, got: {v.Type}, expected: {targetType}");
-
-            return v.Value;
+            return q.First().Value;
         } // end GetValue()
 
         public void SetValue(string name, object? value)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
             if (q.Any())
-                q.First().Update(value?.GetType(), value);
+                q.First().Value = value;
             else
-                m_variables.Add(new(name, value?.GetType(), value));
+                m_variables.Add(new(name, value));
         } // end SetValue()
 
     } // end class

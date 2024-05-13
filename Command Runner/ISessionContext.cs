@@ -4,7 +4,7 @@
     {
         public IList<Variable> Variables { get; }
 
-        public object? GetValue(string name, Type type);
+        public object? GetValue(string name);
 
         public void SetValue(string name, object? value);
 

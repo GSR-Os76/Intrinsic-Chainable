@@ -274,8 +274,6 @@ namespace GSR.Tests.CommandRunner
         [DataRow("-0.990l")]
         public void TestIntegralNumericLiteralDisallowsDecimals(string command) => Interpreter().Evaluate(command);
 
-#warning test lots of bad syntax input. like "903-k42d" or "$-30flp 0"
-
         [TestMethod]
         [ExpectedException(typeof(InvalidCommandOperationException))]
         [DataRow("$Y=\"ll_o27-=d\"", "$Y()")]

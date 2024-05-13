@@ -189,7 +189,7 @@ namespace GSR.CommandRunner
             }
             else
             {
-                object? value = m_sessionContext.GetValue(varName, typeof(object));
+                object? value = m_sessionContext.GetValue(varName);
 
                 ICommand c = CommandFor(VARIABLE_UNWRAP_TYPE, value?.GetType() ?? typeof(object), () => value);
                 if (parse.Equals(string.Empty))

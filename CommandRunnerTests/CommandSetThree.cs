@@ -29,7 +29,7 @@ namespace GSR.Tests.CommandRunner
         public static bool HasXParameters(ICommand c, int x) => c.ParameterTypes.Length == x;
 
         [Command]
-        public static ICommand ReturnsCommand() => new Command("_p", typeof(string), new Type[] { typeof(string), typeof(string) }, (x) => (string)x[0] + (string)x[1]);
+        public static ICommand ReturnsCommand() => new Command("_p", typeof(string), new Type[] { typeof(string), typeof(string) }, (x) => (string)(x[0] ?? throw new ArgumentNullException()) + (string)(x[1] ?? throw new ArgumentNullException()));
 
     } // end class
 } // end namespace
