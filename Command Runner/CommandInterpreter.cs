@@ -267,7 +267,7 @@ namespace GSR.CommandRunner
             if (argCount != c.ParameterTypes.Length)
                 throw new InvalidCommandOperationException($"Parameter count mismatch for command: {c.Name}. Expected {c.ParameterTypes.Length}, got {argCount}.");
 
-#warning validate args s
+#warning validate argument types
 
             if (!parse[0].Equals(')'))
                 throw new InvalidSyntaxException($"Unexpected character \"{parse[0]}\"at args list close"); // shouldn't be an attainable state

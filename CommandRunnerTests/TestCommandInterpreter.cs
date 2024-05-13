@@ -297,8 +297,6 @@ namespace GSR.Tests.CommandRunner
             ci.Evaluate(command);
         } // endTestChainToParameterlessCommandVariable
 
-#warning test chain to command variable type mismatchs;
-
         [TestMethod]
         [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("$m_Sar=>\"\"", "$m_Sar()5")]
@@ -433,7 +431,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("~Variables()", 3, "$HowAreYou=\"Fine\"", "$HowAreYou=\"Bad\"")]
         [DataRow("~Variables()", 4, "$Var1 = $Var2 = 0s")]
         [DataRow("~Variables()", 3, "$Var1 =>$Var2= 0s")]
-        public void TestMetaCommandVariables(string command, int newlinesExpected, params string[] var) 
+        public void TestMetaCommandVariables(string command, int newlinesExpected, params string[] var)
         {
             ICommandInterpreter ci = Interpreter();
             var.ToList().ForEach((x) => ci.Evaluate(x).Execute());
@@ -446,7 +444,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestMetaCommandVariables
 
         [TestMethod]
-        public void TestMetaCommandCommandsDefault() 
+        public void TestMetaCommandCommandsDefault()
         {
             ICommandInterpreter ci = Interpreter();
 
@@ -482,7 +480,7 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [DataRow("~Help().ToLower()")]
-        public void TestMetaCommandChainToSingleParamCommand(string command) 
+        public void TestMetaCommandChainToSingleParamCommand(string command)
         {
             object? v = Interpreter2().Evaluate(command).Execute();
             Assert.IsNotNull(v);
@@ -491,7 +489,7 @@ namespace GSR.Tests.CommandRunner
 
         [TestMethod]
         [DataRow("90i.Add(1i)", 91)]
-        public void TestChainWithAnotherParam(string command, object expectation) 
+        public void TestChainWithAnotherParam(string command, object expectation)
         {
             object? v = Interpreter2().Evaluate(command).Execute();
             Assert.AreEqual(v, expectation);
@@ -500,20 +498,20 @@ namespace GSR.Tests.CommandRunner
         [TestMethod]
         [DataRow("ToLower(?).Range(0i, ? ) ", typeof(string), typeof(string), typeof(int))]
         [DataRow("ToUpper(?).Count()", typeof(int), typeof(string))]
-        public void TestParameterization(string command, Type expectedReturnType, params Type[] expectedParamTypes) 
+        public void TestParameterization(string command, Type expectedReturnType, params Type[] expectedParamTypes)
         {
             ICommandInterpreter ci = Interpreter2();
             ICommand c = ci.Evaluate(command);
 
             Assert.AreEqual(expectedReturnType, c.ReturnType);
             Assert.AreEqual(expectedParamTypes.Length, c.ParameterTypes.Length);
-            for(int i = 0; i < expectedParamTypes.Length; i++)
+            for (int i = 0; i < expectedParamTypes.Length; i++)
                 Assert.AreEqual(expectedParamTypes[i], c.ParameterTypes[i]);
         } // end TestParameterization
 
         [TestMethod]
         [DataRow("$L => ToLower(?)", "\"AND sO We sEe\".$L()", "and so we see")]
-        public void TestChainToVariableHoldingParameterized(string assign, string command, object expectation) 
+        public void TestChainToVariableHoldingParameterized(string assign, string command, object expectation)
         {
             ICommandInterpreter ci = Interpreter2();
             ci.Evaluate(assign).Execute();
@@ -579,20 +577,20 @@ namespace GSR.Tests.CommandRunner
         {
             ICommandInterpreter ci = Interpreter2();
             ci.Evaluate(assign).Execute();
-            ci.Evaluate(command); 
+            ci.Evaluate(command);
         } // end TestFunctionParameterizationOfVariable()
 
         [TestMethod]
         [ExpectedException(typeof(InvalidSyntaxException))]
         [DataRow("$Arv = > \"\"")]
         public void TestInvalidFunctionAssign(string command) => Interpreter().Evaluate(command);
-        
+
         [TestMethod]
         [DataRow("ToUpper(?)", "A", "a")]
         [DataRow("ToUpper(?)", "A", "A")]
         [DataRow("ToLower(ToUpper(?))", "postular", "PostUlAr")]
         [DataRow("Range(ToLower(ToUpper(?)), 0i, ?)", "po", "PostUlAr", 2)]
-        public void TestInvokeParameterized(string command, object? expectation, params object?[] args) 
+        public void TestInvokeParameterized(string command, object? expectation, params object?[] args)
         {
             ICommandInterpreter ci = Interpreter2();
             ICommand c = ci.Evaluate(command);
@@ -603,7 +601,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("$K_ela => Count(?)", "$K_ela.Add(9i)", 18, "~NineLong")]
         // [DataRow("$K_ela => Count(?)", "Add($K_ela, 9i)", 18, "123456789")]
         [DataRow("$_9 => \"ARms123345\".Range(?, ?)", "$_9.Range(0i, ?)", "ARms1233", 0, -1, -1)]
-        public void TestParameterizedInsideVariable(string varAssign, string command, object? expectation, params object?[] args) 
+        public void TestParameterizedInsideVariable(string varAssign, string command, object? expectation, params object?[] args)
         {
             ICommandInterpreter ci = Interpreter2();
             ci.Evaluate(varAssign).Execute();
@@ -639,6 +637,25 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
+        [ExpectedException(typeof(TypeMismatchException))]
+        [DataRow("0i.Count()")]
+        [DataRow("\";;;;;;;;;;;;;;;;;;\".Count().Range(0, 0)")]
+        public void TestChainCommandTypeMismatch(string command) => Interpreter2().Evaluate(command);
+
+        [TestMethod]
+        [ExpectedException(typeof(TypeMismatchException))]
+        [DataRow("$OneG => Count(?)", "948l.$OneG()")]
+        [DataRow("$Q => HasXParameters(?, 9i)", "\"akor\".$Q()")]
+        public void TestChainCommandVariableTypeMismatch(string assign, string command)
+        {
+            ICommandInterpreter ci = Interpreter2();
+            ci.Evaluate(assign).Execute();
+            ci.Evaluate(command);
+        } // end TestChainCommandVariableTypeMismatch()
+
+
+
+        [TestMethod]
         [ExpectedException(typeof(InterpreterException), AllowDerivedTypes = true)]
         [DataRow("oplE_")]
         [DataRow("~")]
@@ -658,6 +675,8 @@ namespace GSR.Tests.CommandRunner
         [DataRow("0b")]
         [DataRow("")]
         [DataRow("$0_ = 0i")]
+        [DataRow("$903-k42d")]
+        [DataRow("$-30flp 0")]
         // more bad chains, and bad command'sings
         // actually  currently works, and is fine. No reason to limit freedom I see. [DataRow("$ = 0i")]
         [DataRow("~Commands(\"\")")]
