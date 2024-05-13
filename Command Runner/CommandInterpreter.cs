@@ -1,5 +1,4 @@
 ﻿using System.Collections.Immutable;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,7 +19,7 @@ namespace GSR.CommandRunner
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
         //private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
 
-// #warning, add more escapes;
+        // #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
         private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
 
@@ -45,6 +44,10 @@ namespace GSR.CommandRunner
 
         public ICommand Evaluate(string input)
         {
+            // rewrite evvaluation flow. Read a value => maybe chain it => if so read a value => maybe chaing it. reduce reuse of chain code even further, and improve adherence to SRP.
+            // Maybe ? at level of other values, allowing for "$A = ?" type things.
+            // Create a object containing type of chain/evaluation and the object functional/normal/parameterize/etc. Drop None from enum and use null to represent no chain, possibly not need
+            // Maybe see about inverting chaining, in the sense of not passing the chained value down and checking things, but reading down and then chaining once evaluation returns to the inital level.
             string parse = input.Trim();
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Command was empty.");
@@ -306,7 +309,7 @@ namespace GSR.CommandRunner
                 throw new InvalidSyntaxException($"Expected chain operator, but got {input}");
         } // end Chain()
 
-        public int GetArgumentCount(string input)
+        private int GetArgumentCount(string input)
         {
             string parse = input[1..]; // remove expected parenthesis
             int count = 0;
@@ -349,14 +352,14 @@ namespace GSR.CommandRunner
                 char c = input[i];
                 if (c.Equals('('))
                     ++depth;
-                else if (depth == 0 && (c.Equals(',') || c.Equals(')'))) 
+                else if (depth == 0 && (c.Equals(',') || c.Equals(')')))
                 {
                     string a = input[..i];
                     if (a.Length == 0)
                         throw new InvalidSyntaxException("Arguments may not be empty.");
 
                     return a;
-                }                    
+                }
                 else if (c.Equals(')'))
                     --depth;
             }
@@ -458,8 +461,10 @@ namespace GSR.CommandRunner
 
 
 
-        public static class MetaCommands
+        private static class MetaCommands
         {
+            // HasVariable/HasCommand/RemoveVariable
+
             [Command]
             public static string Help(CommandInterpreter self)
             {

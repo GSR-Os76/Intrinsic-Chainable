@@ -6,9 +6,9 @@ namespace GSR.Tests.CommandRunner
     public class TestVariable
     {
         [TestMethod]
-        [DataRow("d",  null)]
+        [DataRow("d", null)]
         [DataRow("asSsOpe", 0)]
-        public void TestConstruct(string name, object? value) 
+        public void TestConstruct(string name, object? value)
         {
             Variable v = new(name, value);
             Assert.AreEqual(v.Name, name);

@@ -1,6 +1,6 @@
 ﻿namespace GSR.CommandRunner
 {
-    public enum ChainType
+    internal enum ChainType
     {
         NONE,
         CHAIN,

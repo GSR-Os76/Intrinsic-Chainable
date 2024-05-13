@@ -1,7 +1,7 @@
 ﻿namespace GSR.CommandRunner
 {
     [Serializable]
-    public class InvalidCommandOperationException : Exception
+    public class InvalidCommandOperationException : InterpreterException
     {
         public InvalidCommandOperationException() { }
         public InvalidCommandOperationException(string message) : base(message) { }

@@ -8,7 +8,7 @@
 
         public Type[] ParameterTypes { get; }
 
-        
+
         private readonly Func<object?[], object?> m_function;
 
 

@@ -6,7 +6,7 @@ namespace GSR.Tests.CommandRunner
     public class TestCommandSet
     {
         [TestMethod]
-        public void TestList() 
+        public void TestList()
         {
             ICommandSet cs = new CommandSet(typeof(CommandSetOne));
             Assert.AreEqual(cs.Commands.Count, 4);
@@ -27,7 +27,7 @@ namespace GSR.Tests.CommandRunner
         } // end TestCollisionDetection()
 
         [TestMethod]
-        public void TestGetCommand() 
+        public void TestGetCommand()
         {
             ICommandSet cs = new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) });
             Assert.AreNotEqual(cs.GetCommand("AB", 0), cs.GetCommand("AB", 1));
@@ -40,7 +40,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("", 0)]
         [DataRow("_Ps", 0)]
         [DataRow("AB", 3)]
-        public void TestGetUnknownCommand(string name, int paramCount) 
+        public void TestGetUnknownCommand(string name, int paramCount)
         {
             ICommandSet cs = new CommandSet(new List<Type>() { typeof(CommandSetOne), typeof(CommandSetTwo) });
             cs.GetCommand(name, paramCount);

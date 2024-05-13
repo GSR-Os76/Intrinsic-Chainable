@@ -682,6 +682,7 @@ namespace GSR.Tests.CommandRunner
         [DataRow("~Commands(\"\")")]
         public void ThrowsInterpreterException(string command) => Interpreter().Evaluate(command);
 
-        // test expection oplE_ throw s
+#warning assure always lazy. Including parameterized args, arguments that're chained, arguments that're functional, literals, etc.
+
     } // end class
 } // end namespace

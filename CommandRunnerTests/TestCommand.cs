@@ -1,5 +1,4 @@
 ﻿using GSR.CommandRunner;
-using System.Text;
 
 namespace GSR.Tests.CommandRunner
 {
@@ -8,7 +7,7 @@ namespace GSR.Tests.CommandRunner
     {
         public ICommand A() => new Command("A", typeof(int), new Type[] { typeof(int), typeof(int), typeof(int) }, (x) => (int)x[0] + ((int)x[1] - (int)x[2]));
 
-        public ICommand B() => new Command("B", typeof(string), new Type[] { }, (x) => "" + 1+13);
+        public ICommand B() => new Command("B", typeof(string), new Type[] { }, (x) => "" + 1 + 13);
 
         public ICommand SubCable() => new Command("SubCable", typeof(void), new Type[] { typeof(Exception) }, (x) => null);
 

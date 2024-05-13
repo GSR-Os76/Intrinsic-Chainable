@@ -14,7 +14,7 @@ namespace GSR.Tests.CommandRunner
         public static string ToUpper(string s) => s.ToUpper();
 
         [Command]
-        public static string Range(string s, int start, int end) => s[(start< 0 ? ^Math.Abs(start) : start)..(end < 0 ? ^Math.Abs(end) : end)];
+        public static string Range(string s, int start, int end) => s[(start < 0 ? ^Math.Abs(start) : start)..(end < 0 ? ^Math.Abs(end) : end)];
 
         [Command]
         public static int Count(string s) => s.Length;

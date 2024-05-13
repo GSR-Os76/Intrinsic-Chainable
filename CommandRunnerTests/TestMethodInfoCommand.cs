@@ -46,7 +46,7 @@ namespace GSR.Tests.CommandRunner
 
 
         [TestMethod]
-        public void TestNoParameterTypes() 
+        public void TestNoParameterTypes()
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
             Assert.AreEqual(c.ParameterTypes.Length, 0);
@@ -56,16 +56,16 @@ namespace GSR.Tests.CommandRunner
         public void TestParameterTypes()
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
-            Type[] expectation = new Type[] {typeof(int), typeof(string)};
+            Type[] expectation = new Type[] { typeof(int), typeof(string) };
             Assert.AreEqual(c.ParameterTypes.Length, expectation.Length);
-            for (int i = 0; i < c.ParameterTypes.Length; i++) 
+            for (int i = 0; i < c.ParameterTypes.Length; i++)
                 Assert.AreEqual(expectation[i], c.ParameterTypes[i]);
         } // end TestNoParameterTypes()
 
 
 
         [TestMethod]
-        public void TestParameterlessResultlessExecution() 
+        public void TestParameterlessResultlessExecution()
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.ABMethod);
             object? r = c.Execute(new object[] { });
@@ -77,7 +77,7 @@ namespace GSR.Tests.CommandRunner
         public void TestExecution(int a, string b, string result)
         {
             ICommand c = new MethodInfoCommand(CommandSetOne.CommadTetsMethod);
-            object? r = c.Execute(new object[] {a, b});
+            object? r = c.Execute(new object[] { a, b });
             Assert.AreEqual(r?.GetType(), typeof(StringBuilder));
             Assert.AreEqual(r?.ToString(), result);
         } // end TestExecution()

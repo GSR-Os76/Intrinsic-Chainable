@@ -1,18 +1,21 @@
+# Public API
+## Interpreter structure.
 ```mermaid
 classDiagram
 
     
     class Variable{
         +string Name
-        +Type Type
         +object Value
     }
 
     
     
     class ISessionContext{
-        +object GetValue(string name, Type type)
-        +void SetValue(string name, object value)
+        +IList<Variable> Variables
+
+        +GetValue(string name) object? 
+        +SetValue(string name, object? value) void 
     }
 
     class SessionContext{
@@ -23,26 +26,39 @@ classDiagram
 
 
 
-    class CommandInterpreter{
-        +CommandInterpreter(ICommandSet defaults, ISessionContext session) CommandInterpreter
-
-        +Parse(string command) ICommand
+    class ICommandInterpreter{
+        +Evaluate(string input) ICommand
     }
-    ISessionContext *-- CommandInterpreter
-    ICommandSet *-- CommandInterpreter
+    ISessionContext *-- ICommandInterpreter
+    ICommandSet *-- ICommandInterpreter
+
+    class CommandInterpreter{
+        +CommandInterpreter(ICommandSet defaultCommands) CommandInterpreter
+
+        +CommandInterpreter(ICommandSet defaultCommands, ISessionContext sessionContext) CommandInterpreter
+      
+    }
+    ICommandInterpreter <|.. CommandInterpreter
+    
     
 
 
     class ICommandSet{
-        +IList &lt; ICommand &gt; Commands
+
+        +GetCommand(string name, int paramCount) ICommand
+        +IList &lt ICommand> Commands
     }
 
     class CommandSet{
-        +CommandSet(IEnumerable &lt; Type &gt; collectFrom) CommandSet
+        +CommandSet() CommandSet
+        +CommandSet(Type commandSource) CommandSet
+        +CommandSet(IEnumerable &lt Type> commandSources) CommandSet
+        +CommandSet(IEnumerable &lt MethodInfo> commandSources) CommandSet
+
+        +CommandSet(IEnumerable &lt Type> collectFrom) CommandSet
     }
     ICommandSet <|.. CommandSet
 
-    ICommand *-- CommandSet
     CommandAttribute -- CommandSet
 
 
@@ -50,18 +66,43 @@ classDiagram
     class CommandAttribute{
 
     }
+```
 
+## ICommands
+```mermaid
+classDiagram
     class ICommand{
-        +string Code
-
+        +string Name
         +Type ReturnType
+        +Type[] ParameterTypes
 
-        +Type[] Parameters
-
-
-
-        +Execute(object[] parameters) object
+        +Execute(object?[] parameters) object?
     }
 
+    class Command{
+        +Command(string name, Type returnType, Type[] parameterTypes, Func &lt object?[], object?> func) Command
+    }
+    ICommand <|.. Command
+
+    class MethodInfoCommand{
+        +MethodInfoCommand(MethodInfo from) MethodInfoCommand
+    }
+    Command <|-- MethodInfoCommand
+
+```
+
+## Exceptions
+```mermaid
+classDiagram
+
+    class InterpreterException{
+
+    }
+    Exception <|-- InterpreterException
+    InterpreterException <|-- InvalidCommandOperationException
+    InterpreterException <|-- InvalidSyntaxException
+    InterpreterException <|-- InvalidCommandOperationException
+    InterpreterException <|-- TypeMismatchException
+    InterpreterException <|-- UndefinedMemberException
 
 ```

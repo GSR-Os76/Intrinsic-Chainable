@@ -2,8 +2,14 @@
 {
     public class Variable
     {
+        /// <summary>
+        /// The variables scope unique name.
+        /// </summary>
         public string Name { get; }
 
+        /// <summary>
+        /// The value that's stored in the variable.
+        /// </summary>
         public object? Value { get; set; }
 
 
