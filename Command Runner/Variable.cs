@@ -1,5 +1,8 @@
 ﻿namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// A named holder of a variable value.
+    /// </summary>
     public class Variable
     {
         /// <summary>
@@ -13,7 +16,7 @@
         public object? Value { get; set; }
 
 
-
+        /// <inheritdoc/>
         public Variable(string name, object? value)
         {
             Name = name;

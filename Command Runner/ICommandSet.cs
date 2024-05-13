@@ -1,5 +1,8 @@
 ﻿namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Contract for an object which can hold a set of commands.
+    /// </summary>
     public interface ICommandSet
     {
         /// <summary>

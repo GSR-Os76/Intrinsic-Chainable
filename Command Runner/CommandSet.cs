@@ -3,21 +3,37 @@ using System.Reflection;
 
 namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Basic ICommandSet implemenation.
+    /// </summary>
     public class CommandSet : ICommandSet
     {
+        /// <inheritdoc/>
         public IList<ICommand> Commands { get; }
 
 
 
+        /// <summary>
+        /// Construct an empty CommandSet instance.
+        /// </summary>
         public CommandSet() : this(new List<MethodInfo>()) { } // end constructor
 
+        /// <summary>
+        /// Construct a CommandSet instance with all static methods marked with the CommandAttribute attribute in the given type.
+        /// </summary>
         public CommandSet(Type commandSource) : this(new List<Type>() { commandSource }) { } // end constructor
 
+        /// <summary>
+        /// Construct a CommandSet instance with all static methods marked with the CommandAttribute attribute in the given types.
+        /// </summary>
         public CommandSet(IEnumerable<Type> commandSources) : this(commandSources
             .SelectMany((x) => x.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             .Where((x) => x.GetCustomAttribute(typeof(CommandAttribute)) is not null))
         { } // end constructor
 
+        /// <summary>
+        /// Construct a CommandSet instance containing commands correlating to each MethodInfo provided.
+        /// </summary>
         public CommandSet(IEnumerable<MethodInfo> commandSources)
         {
             Commands = commandSources.Select((x) => (ICommand)new MethodInfoCommand(x)).ToImmutableList();
@@ -28,7 +44,7 @@ namespace GSR.CommandRunner
         } // end constructor
 
 
-
+        /// <inheritdoc/>
         public ICommand GetCommand(string name, int paramCount)
         {
             IEnumerable<ICommand> matches = Commands.Where((x) => name.Equals(x.Name) && paramCount == x.ParameterTypes.Length);

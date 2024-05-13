@@ -2,13 +2,18 @@
 
 namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Basic ISessionContext implementation.
+    /// </summary>
     public class SessionContext : ISessionContext
     {
+        /// <inheritdoc/>
         public IList<Variable> Variables => m_variables.ToImmutableList();
         private readonly IList<Variable> m_variables = new List<Variable>();
 
 
 
+        /// <inheritdoc/>
         public object? GetValue(string name)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);
@@ -18,6 +23,7 @@ namespace GSR.CommandRunner
             return q.First().Value;
         } // end GetValue()
 
+        /// <inheritdoc/>
         public void SetValue(string name, object? value)
         {
             IEnumerable<Variable> q = m_variables.Where((x) => x.Name == name);

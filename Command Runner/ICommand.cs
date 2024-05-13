@@ -1,5 +1,8 @@
 ﻿namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Signature for commands.
+    /// </summary>
     public interface ICommand
     {
         /// <summary>

@@ -680,6 +680,13 @@ namespace GSR.Tests.CommandRunner
         // more bad chains, and bad command'sings
         // actually  currently works, and is fine. No reason to limit freedom I see. [DataRow("$ = 0i")]
         [DataRow("~Commands(\"\")")]
+        [DataRow("s(a,)")]
+        [DataRow("s(a)")]
+        [DataRow("asdfsd()")]
+        [DataRow("s(a,")]
+        [DataRow(",a()")]
+        [DataRow(".a()")]
+        [DataRow("ToD.()_")]
         public void ThrowsInterpreterException(string command) => Interpreter().Evaluate(command);
 
 #warning assure always lazy. Including parameterized args, arguments that're chained, arguments that're functional, literals, etc.

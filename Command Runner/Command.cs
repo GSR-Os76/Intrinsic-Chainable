@@ -1,11 +1,17 @@
 ﻿namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// An ICommand implementation for manually providing each part of a command.
+    /// </summary>
     public class Command : ICommand
     {
+        /// <inheritdoc/>
         public string Name { get; }
 
+        /// <inheritdoc/>
         public Type ReturnType { get; }
 
+        /// <inheritdoc/>
         public Type[] ParameterTypes { get; }
 
 
@@ -13,6 +19,13 @@
 
 
 
+        /// <summary>
+        /// Construct a command with the provided values.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="returnType"></param>
+        /// <param name="parameterTypes"></param>
+        /// <param name="func">The behavior to perform when the command is executed. If return type should be void return null instead.</param>
         public Command(string name, Type returnType, Type[] parameterTypes, Func<object?[], object?> func)
         {
             Name = name;
@@ -24,6 +37,7 @@
 
 
 
+        /// <inheritdoc/>
         public object? Execute(object?[] parameters)
         {
             if (ParameterTypes.Length != parameters.Length)

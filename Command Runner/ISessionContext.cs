@@ -1,5 +1,8 @@
 ﻿namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Signature for an object holding information of the current interpretation session.
+    /// </summary>
     public interface ISessionContext
     {
         /// <summary>

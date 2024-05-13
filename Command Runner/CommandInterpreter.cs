@@ -4,6 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace GSR.CommandRunner
 {
+    /// <summary>
+    /// Basic ICommandInterpreter implementation.
+    /// </summary>
     public class CommandInterpreter : ICommandInterpreter
     {
         private const string FUNCTION_ASSIGN_TYPE = "fa";
@@ -17,7 +20,6 @@ namespace GSR.CommandRunner
         private const string NUMERIC_START_CHAR_REGEX = @"[-0-9]";
         private const string NUMERIC_REGEX = @"^-?[0-9]+([sil]|((\.[0-9]+)?[fdm]))";
         private const string ILLEGAL_NUMERIC_REGEX = @"^-?[0-9]+\.[0-9]+[sil]";
-        //private const string ARGUMENT_REGEX = @"^([^,\(\)]|(\(.*?\)))+";
 
         // #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
@@ -27,21 +29,23 @@ namespace GSR.CommandRunner
 
         private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(MetaCommands));
         private readonly ICommandSet m_commands;
-        private readonly ISessionContext m_sessionContext;
+        private readonly ISessionContext m_sessionContext = new SessionContext();
         private int m_uniqueNumber = 0;
 
 
 
-        public CommandInterpreter(ICommandSet defaultCommands) : this(defaultCommands, new SessionContext()) { } // end constructor
-
-        public CommandInterpreter(ICommandSet defaultCommands, ISessionContext sessionContext)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="defaultCommands">The set of commands innately discoverable by the interpreter.</param>
+        public CommandInterpreter(ICommandSet defaultCommands) 
         {
             m_commands = defaultCommands;
-            m_sessionContext = sessionContext;
         } // end constructor
 
 
 
+        /// <inheritdoc/>
         public ICommand Evaluate(string input)
         {
             // rewrite evvaluation flow. Read a value => maybe chain it => if so read a value => maybe chaing it. reduce reuse of chain code even further, and improve adherence to SRP.
@@ -317,7 +321,7 @@ namespace GSR.CommandRunner
             if (parse.Length == 0)
                 throw new InvalidSyntaxException("Expected argument but got nothing.");
 
-            while (!parse[0].Equals(')'))
+            while (parse.Length > 0 && !parse[0].Equals(')'))
             {
                 string arg = CaptureArgument(parse);
                 parse = parse[(arg.Length)..];
@@ -334,7 +338,9 @@ namespace GSR.CommandRunner
                     throw new InvalidSyntaxException($"Unexpected character after command argument: \"{parse[0]}\""); // theoretically unreachable route
             }
 
-            if (parse[0].Equals(')'))
+            if (parse.Length == 0)
+                throw new InvalidSyntaxException("Didn't find close parenthesis to end the argument list.");
+            else if (parse[0].Equals(')'))
                 return count;
             else
                 throw new InvalidStateException($"Unexpected character after reading arguments: \"{parse[0]}\". The branch was anticipated inpossible.");
