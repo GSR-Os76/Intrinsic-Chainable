@@ -8,12 +8,20 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Version>2.0.0.1</Version>
     <Authors>GSR</Authors>
-    <RepositoryUrl>https://github.com/GSR-Os76/Command-Runner</RepositoryUrl>
+    <RepositoryUrl>https://github.com/GSR-Os76/Intrinsic-Chainable-Interpreter</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>gsr_intrinsic_chainable_interpreter</PackageId>
     <Title>GSR Intrinsic Chainable Interpreter</Title>
     <Product>Intrinsic Chainable Interpreter</Product>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="README.md">
