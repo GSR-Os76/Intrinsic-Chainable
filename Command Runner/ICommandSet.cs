@@ -1,4 +1,4 @@
-﻿namespace GSR.CommandRunner
+﻿namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Contract for an object which can hold a set of commands.

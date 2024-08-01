@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace GSR.CommandRunner
+namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// An ICommand implementation for creating a command that's equivalent to an MethodInfo instance.

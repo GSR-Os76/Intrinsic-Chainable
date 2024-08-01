@@ -1,4 +1,4 @@
-﻿namespace GSR.CommandRunner
+﻿namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Generic exception for interpretation errors.

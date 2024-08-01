@@ -1,4 +1,4 @@
-﻿namespace GSR.CommandRunner
+﻿namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// The contract for an object which can convert command code into equivalent ICommands.

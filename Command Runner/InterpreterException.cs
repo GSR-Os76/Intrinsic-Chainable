@@ -1,4 +1,4 @@
-﻿namespace GSR.CommandRunner
+﻿namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Base class of any exception that is the result of a problem interpreting command code.

@@ -1,4 +1,4 @@
-﻿namespace GSR.CommandRunner
+﻿namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// An ICommand implementation for manually providing each part of a command.

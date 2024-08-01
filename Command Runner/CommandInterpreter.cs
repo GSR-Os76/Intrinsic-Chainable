@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace GSR.CommandRunner
+namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Basic ICommandInterpreter implementation.

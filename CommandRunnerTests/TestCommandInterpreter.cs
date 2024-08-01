@@ -1,7 +1,7 @@
-﻿using GSR.CommandRunner;
+﻿using GSR.IntrinsicChainable;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 
-namespace GSR.Tests.CommandRunner
+namespace GSR.Tests.IntrinsicChainable
 {
     [TestClass]
     public class TestCommandInterpreter

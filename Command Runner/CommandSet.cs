@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Reflection;
 
-namespace GSR.CommandRunner
+namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Basic ICommandSet implemenation.

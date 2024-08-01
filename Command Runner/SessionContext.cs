@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace GSR.CommandRunner
+namespace GSR.IntrinsicChainable
 {
     /// <summary>
     /// Basic ISessionContext implementation.

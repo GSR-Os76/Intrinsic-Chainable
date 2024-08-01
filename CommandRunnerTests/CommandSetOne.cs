@@ -1,8 +1,8 @@
-﻿using GSR.CommandRunner;
+﻿using GSR.IntrinsicChainable;
 using System.Reflection;
 using System.Text;
 
-namespace GSR.Tests.CommandRunner
+namespace GSR.Tests.IntrinsicChainable
 {
     public static class CommandSetOne
     {

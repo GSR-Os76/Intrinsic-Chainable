@@ -2,18 +2,19 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>Command_Runner</RootNamespace>
+    <RootNamespace>GSR.IntrinsicChainable</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <Version>2.0.0.1</Version>
+    <Version>2.1.0.0</Version>
     <Authors>GSR</Authors>
-    <RepositoryUrl>https://github.com/GSR-Os76/Intrinsic-Chainable-Interpreter</RepositoryUrl>
+    <RepositoryUrl>https://github.com/GSR-Os76/Intrinsic-Chainable</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageId>gsr_intrinsic_chainable_interpreter</PackageId>
     <Title>GSR Intrinsic Chainable Interpreter</Title>
     <Product>Intrinsic Chainable Interpreter</Product>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>GSR.IntrinsicChainable</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

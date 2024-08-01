@@ -1,6 +1,6 @@
-﻿using GSR.CommandRunner;
+﻿using GSR.IntrinsicChainable;
 
-namespace GSR.Tests.CommandRunner
+namespace GSR.Tests.CommIntrinsicChainableandRunner
 {
     [TestClass]
     public class TestVariable
