@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Command Runner", "Command Runner\Command Runner.csproj", "{16E1FF17-BEDD-4ABD-A8A2-3421C22CA659}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intrinsic Chainable", "Command Runner\Intrinsic Chainable.csproj", "{16E1FF17-BEDD-4ABD-A8A2-3421C22CA659}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommandRunnerTests", "CommandRunnerTests\CommandRunnerTests.csproj", "{1191D904-E49A-462C-B92C-E28AAAB95C1F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntrinsicChainableTests", "CommandRunnerTests\IntrinsicChainableTests.csproj", "{1191D904-E49A-462C-B92C-E28AAAB95C1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

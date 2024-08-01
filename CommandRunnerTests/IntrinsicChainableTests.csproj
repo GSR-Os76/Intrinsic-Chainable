@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Command Runner\Command Runner.csproj" />
+    <ProjectReference Include="..\Command Runner\Intrinsic Chainable.csproj" />
   </ItemGroup>
 
 </Project>
