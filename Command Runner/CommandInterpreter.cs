@@ -23,9 +23,9 @@ namespace GSR.IntrinsicChainable
 
         // #warning, add more escapes;
         private static readonly IList<Tuple<string, string>> ESCAPE_REPLACEMENTS = new List<Tuple<string, string>>() { Tuple.Create(@"\\", @"\"), Tuple.Create(@"\""", @"""") };
-        private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_R = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
+        private static readonly IEnumerable<Tuple<string, string>> ESCAPE_REPLACEMENTS_REGEXY = ESCAPE_REPLACEMENTS.Select((x) => Tuple.Create(x.Item1.Replace(@"\", @"\\"), x.Item2.Replace(@"\", @"\\")));
 
-        private static readonly string UNTIL_END_QUOTE_REGEX = @"^([^\\""]" + ESCAPE_REPLACEMENTS_R.Select((x) => x.Item1).Aggregate("|", (x, y) => $"{x}({y})|")[..^1] + @")*";
+        private static readonly string UNTIL_END_QUOTE_REGEX = @"^([^\\""]" + ESCAPE_REPLACEMENTS_REGEXY.Select((x) => x.Item1).Aggregate("|", (x, y) => $"{x}({y})|")[..^1] + @")*";
 
         private static readonly ICommandSet s_metaCommands = new CommandSet(typeof(MetaCommands));
         private readonly ICommandSet m_commands;
@@ -503,12 +503,12 @@ namespace GSR.IntrinsicChainable
                     $"\r\n" +
                     $"Commands: \r\n" +
                     $"A default set of commands may be provided to the interpreter. \r\n" +
-                    $"All comand must start with an underscore or letter, then any number of underscores and letters and numbers are allowed. \r\n" +
+                    $"All commands must start with an underscore or letter, then any number of underscores and letters and numbers are allowed. \r\n" +
                     $"\r\n" +
                     $"Command Invocation: \r\n" +
                     $"A command including one in a variable may be invoked by following it with a matched pair of parenthesis. \r\n" +
                     $"Any number of arguments may be included within the matched parenthesis, separated by commas. \r\n" +
-                    $"An argument proceeded by \">\" will be passed as a command, otherwise it'll be immediately executed eithout arguments, or if it's parameterized it'll be inlined. \r\n" +
+                    $"An argument proceeded by \">\" will be passed as a command, otherwise it'll be immediately executed without arguments, or if it's parameterized it'll be inlined. \r\n" +
                     $"If the considered command is chained into, the value chained into it is the first argument, and arguments with the matched parenthesis must start with the second. \r\n" +
                     $"Multiple command may exist with the same name so long as they all have distinct parameter counts. \r\n" +
                     $"An incorrect number of arguments will result in throwing an exception. \r\n" +
