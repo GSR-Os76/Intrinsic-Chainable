@@ -1,5 +1,5 @@
 ﻿everything's a command
-
+everything's left associative
 
 
 # __identifier__
@@ -28,10 +28,11 @@
 		- ~    complement
 		- ++   increment
 		- --   decrement
-		- -    sign negate
+			- maybe make post for unabiguity and familiarity
+		- -    _sign_negate_
 	- __binary_op_identifier__
 		- >>   arithmetic right shift
-		- <<   arithmetic/logicals left shift
+		- <<   arithmetic/logical left shift
 		- >>>  logical right shift
 		- (<)  circular left shirt
 		- (>)  circular right shirt
@@ -42,26 +43,90 @@
 		- -    subtraction
 		- /    division
 		- *    multiplication
-		- %    modulus
+		- %    modulo
 		- **   exponentiation
 		
 	
 
 # _command_
 	- _literal_command_
-		- _numeric_value_return_command_ = ^-?[0-9]+(__integral_numeral_identifier__|((\.[0-9]+)?__rational_numeral_identifier__))$
-		- _string_value_return_command_ = ^""([^\\""]|__escapes__)*""$	
-	- _variable_unwrapped_value_return_command_ = __variable_command_identifier__
-	- _variable_assign_command_ = __variable_command_identifier__ = __arg__
-	- _variable_assign_command_value_return_command_ = __variable_command_identifier__ >= __arg__
-	- _chain_command_ = __arg__._command_
-	- _chain_command_value_return_command_ = __arg__>._command_
-	- _icommand_execute_command_ = __arg__\(__arg__, ...\)
-		- first arg must execute to an ICommand
-	- _evaluate_group_command_ = \(_command_\)
-	- _command_value_return_command_ = >_command_
+		- _numeric_literal_command_ = ^-?[0-9]+(__integral_numeral_identifier__|((\.[0-9]+)?__rational_numeral_identifier__))$
+			- returns numeric literal on execution
+			- built in negative here is technically indistiguishable from a unary negate
+		- _string_literal_command_ = ^""([^\\""]|__escapes__)*""$	
+			- returns string literal on execution
+	- _parenthesis_enclosed_command_ = \(__arg__\)
+		- returns argument result
+	- _unexecuted_command_ = >_command_
 		- returns a command that returns the command that's the operator's argument
+	
+	- _variable_unwrap_command_ = __variable_command_identifier__
+		- returns contained value
+	- _variable_assign_command_ = __variable_command_identifier__ = __arg__
+
+	- _chain_command_ = __arg__._command_
+	- _command_execute_command_ = __command_identifier__\(__arg__...\)
+		- could make work on any _command_ instead, but that case becomes ambiguous around _variable_unwrap_command_
+
 	- _unary_op_command_ = __unary_op_identifier__ __arg__
-	- _unary_op_command_value_return_command_ = >__unary_op_identifier__ __arg__
 	- _binary_op_command_ = __arg__ __binary_op_identifier__ __arg__
-	- _binary_op_command_value_return_command_ = __arg__ >__binary_op_identifier__ __arg__
+
+
+
+# character evaluation tree
+[enter]
+	-> [command]
+		-?> [end]
+		-> [__arg__]
+
+	
+[command]
+	-?> "
+		-?> _string_literal_command_
+	-?> -?[0-9]
+		-?> _numeric_literal_command_
+
+
+
+	-?> (
+		-?> __arg__
+			-?> )
+				-> [compose](_parenthesis_enclosed_command_)
+	-?> >
+		-?> _command_
+			-?> _unexecuted_command_
+
+
+
+	-?> $
+		-?> __variable_command_identifier__
+			-?> =
+				-?> __arg__
+					-> [compose](_variable_assign_command_)
+			-?> (
+				-?> unwraps to ICommand
+					-> [compose](_command_execute_command_)
+			-?> _variable_unwrap_command_
+	-?> ~
+		-?> __meta_command_identifier__
+			-> [compose](_command_execute_command_)
+	-?> __innate_command_identifier__
+		-> [compose](_command_execute_command_)
+
+
+
+	-?> ?
+		-> [__arg__]
+		- possibly have enter not err after this, instead return some kind of _parameterize_command_ that simply return it's argument on execute. will complicate parameterize everywhere else.
+	-?> __unary_op_identifier__
+		-?> __arg__
+			-> [compose](_unary_op_command_)
+
+[__arg__]
+	-?> _chain_command_
+	-?> _binary_op_command_
+
+
+[compose](_command_, __arg__...)
+	- returned ICommand has param count equal to number of null Arguments
+	- Non null Arguments pass directly, parameterized map in order of occurence to returned's parameters.
